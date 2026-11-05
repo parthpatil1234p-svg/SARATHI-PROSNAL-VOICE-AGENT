@@ -16,6 +16,7 @@ if sys.platform == "win32":
 from rich.console import Console
 
 from config.settings import settings
+from core.event_bus import event_bus
 from core.state_machine import AssistantState, StateMachine
 from llm.client import LLMClient
 from llm.memory import ConversationMemory
@@ -52,6 +53,15 @@ class AssistantOrchestrator:
             chunk_size=settings.CHUNK_SIZE
         )
         self.is_running = False
+        self.state_machine.add_listener(self._notify_state_change)
+
+    def _notify_state_change(self, old_state: AssistantState, new_state: AssistantState):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(event_bus.publish("state_changed", new_state.name))
+        except Exception:
+            pass
 
     async def start_voice_loop(self):
         """Main asynchronous event loop for real-time voice interaction."""
@@ -105,6 +115,7 @@ class AssistantOrchestrator:
                         if self.vad.is_speech(chunk):
                             console.print("[bold yellow]🛑 User barge-in detected! Halting speech output.[/bold yellow]")
                             player.interrupt()
+                            asyncio.create_task(event_bus.publish("barge_in", {}))
                             self.state_machine.transition_to(AssistantState.INTERRUPTED)
                             await asyncio.sleep(0.1)
                             self.state_machine.transition_to(AssistantState.LISTENING)
@@ -129,10 +140,12 @@ class AssistantOrchestrator:
 
         stt_latency = (time.time() - start_time) * 1000
         console.print(f"[bold white]User:[/bold white] {transcript} [dim]({stt_latency:.0f}ms STT)[/dim]")
+        await event_bus.publish("user_speech", {"text": transcript, "latency_ms": round(stt_latency, 1)})
 
         # Check for direct stop commands
         if transcript.lower().strip() in ("stop", "quiet", "cancel", "nevermind", "shut up"):
             player.interrupt()
+            await event_bus.publish("barge_in", {})
             self.state_machine.transition_to(AssistantState.IDLE)
             return
 
@@ -142,6 +155,7 @@ class AssistantOrchestrator:
         """Processes a textual user prompt through LLM and streams spoken response with parallel pipelining."""
         self.state_machine.transition_to(AssistantState.PROCESSING)
         self.memory.add_user_message(user_text)
+        await event_bus.publish("user_speech", {"text": user_text, "latency_ms": 0})
 
         console.print(f"[bold cyan]{settings.ASSISTANT_NAME}:[/bold cyan] ", end="")
         token_stream = self.llm.stream_response(self.memory)
@@ -180,6 +194,9 @@ class AssistantOrchestrator:
                     ttfa = (time.time() - start_time) * 1000
                     logger.info(f"Time-to-First-Audio (TTFA): {ttfa:.1f}ms")
                     first_audio_played = True
+                    await event_bus.publish("assistant_speech", {"text": sentence, "ttfa_ms": round(ttfa, 1)})
+                else:
+                    await event_bus.publish("assistant_speech", {"text": sentence, "ttfa_ms": 0})
 
                 success = await asyncio.to_thread(player.play_bytes, audio_bytes)
                 if not success:

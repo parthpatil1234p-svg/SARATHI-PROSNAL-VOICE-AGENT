@@ -45,3 +45,41 @@ def get_system_diagnostics() -> dict:
         "battery_status": battery_info,
         "system_uptime_hours": uptime_hours
     }
+
+
+@register_tool(
+    name="purge_system_cache",
+    description="Purges and cleans temporary Windows cache files to free up disk storage space."
+)
+def purge_system_cache() -> str:
+    """Cleans temporary files in user temp folder."""
+    import os
+    import shutil
+    import tempfile
+
+    temp_dir = tempfile.gettempdir()
+    deleted_files = 0
+    freed_bytes = 0
+
+    try:
+        for root, dirs, files in os.walk(temp_dir):
+            for file in files:
+                try:
+                    file_path = os.path.join(root, file)
+                    size = os.path.getsize(file_path)
+                    os.remove(file_path)
+                    deleted_files += 1
+                    freed_bytes += size
+                except Exception:
+                    pass
+            for d in dirs:
+                try:
+                    shutil.rmtree(os.path.join(root, d), ignore_errors=True)
+                except Exception:
+                    pass
+
+        freed_mb = round(freed_bytes / (1024 * 1024), 1)
+        return f"Cache purge complete, sir. Cleared {deleted_files} temporary files, liberating {freed_mb} megabytes of storage."
+    except Exception as e:
+        return f"Cache purge subroutine encountered: {e}"
+

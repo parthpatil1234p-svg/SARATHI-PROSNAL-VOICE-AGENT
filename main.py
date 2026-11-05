@@ -73,18 +73,31 @@ async def run_interactive_cli(orchestrator: AssistantOrchestrator):
 
 async def main():
     parser = argparse.ArgumentParser(description="J.A.R.V.I.S. AI Voice Assistant")
-    parser.add_argument("--gui", action="store_true", help="Launch the Desktop GUI Application")
+    parser.add_argument("--gui", "--hud", action="store_true", help="Launch the Mark VII Tactical Desktop HUD")
+    parser.add_argument("--tk", action="store_true", help="Launch the CustomTkinter GUI instead of the Web HUD")
     parser.add_argument("--cli", action="store_true", help="Run in interactive CLI mode (Type prompt, hear voice)")
     parser.add_argument("--voice", action="store_true", help="Run headless in continuous background voice mode")
     parser.add_argument("--devices", action="store_true", help="List all audio input and output devices")
     parser.add_argument("--tools", action="store_true", help="List all registered OS and diagnostic tools")
     args = parser.parse_args()
 
-    # If --gui or no arguments passed, launch the sleek Desktop GUI HUD
-    if args.gui or (not args.cli and not args.voice and not args.devices and not args.tools):
+    # If --tk passed, launch CustomTkinter app
+    if args.tk:
         from gui.app import run_gui
         run_gui()
         return
+
+    # If --gui/--hud or no arguments passed, launch the Mark VII Tactical Desktop HUD
+    if args.gui or (not args.cli and not args.voice and not args.devices and not args.tools):
+        try:
+            from gui.hud import run_tactical_hud
+            run_tactical_hud()
+            return
+        except Exception as e:
+            console.print(f"[yellow]Tactical HUD encountered: {e}. Falling back to standard Tkinter GUI.[/yellow]")
+            from gui.app import run_gui
+            run_gui()
+            return
 
     display_banner()
 

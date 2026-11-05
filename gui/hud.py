@@ -1,0 +1,134 @@
+"""J.A.R.V.I.S. Mark VII Tactical Desktop HUD - WebView2 / PyWebView Launcher."""
+
+import asyncio
+import json
+import logging
+import threading
+import time
+from pathlib import Path
+
+import webview
+
+from config.settings import BASE_DIR, settings
+from core.event_bus import event_bus
+from core.orchestrator import AssistantOrchestrator
+from gui.web_bridge import JarvisWebBridge
+
+logger = logging.getLogger("JARVIS.HUD")
+
+
+class JarvisHUDApp:
+    """
+    Main Desktop HUD Application runner.
+    Hosts the Stitch-designed Mark VII Tactical Interface via Microsoft Edge WebView2,
+    bridged seamlessly to the Python assistant orchestrator.
+    """
+
+    def __init__(self):
+        self.orchestrator = AssistantOrchestrator()
+        self.bridge = JarvisWebBridge(self.orchestrator)
+        self.window = None
+        self.loop: asyncio.AbstractEventLoop | None = None
+        self.bg_thread: threading.Thread | None = None
+        self.telemetry_thread: threading.Thread | None = None
+        self.is_running = True
+
+    def _run_async_loop(self):
+        """Runs the background asyncio event loop for orchestrator tasks."""
+        self.loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.loop)
+        self.bridge.set_loop(self.loop)
+
+        # Wire event_bus to push live events to the WebView UI
+        async def on_event(event_name: str, payload):
+            if self.window and self.is_running:
+                try:
+                    payload_json = json.dumps(payload, default=str)
+                    js_code = f"if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', {payload_json});"
+                    self.window.evaluate_js(js_code)
+                except Exception as e:
+                    logger.debug(f"Event dispatch error for {event_name}: {e}")
+
+        event_bus.subscribe("state_changed", lambda s: on_event("state_changed", s))
+        event_bus.subscribe("user_speech", lambda p: on_event("user_speech", p))
+        event_bus.subscribe("assistant_speech", lambda p: on_event("assistant_speech", p))
+        event_bus.subscribe("tool_executed", lambda p: on_event("tool_executed", p))
+        event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
+
+        # Start continuous voice loop by default
+        self.bridge.is_voice_active = True
+        self.loop.create_task(self.orchestrator.start_voice_loop())
+
+        try:
+            self.loop.run_forever()
+        finally:
+            self.loop.close()
+
+    def _telemetry_ticker(self):
+        """Pushes system diagnostics and real-time audio levels to the HUD."""
+        last_telemetry_time = 0.0
+
+        while self.is_running:
+            now = time.time()
+            if self.window:
+                try:
+                    # 1. Audio Visualizer Level (~15Hz for snappy HUD responsiveness)
+                    audio_level = getattr(self.orchestrator.audio_stream, "latest_level", 0)
+                    if audio_level > 0:
+                        js_audio = f"if (window.updateAudioLevel) window.updateAudioLevel({audio_level});"
+                        self.window.evaluate_js(js_audio)
+
+                    # 2. System Hardware Telemetry (~1Hz)
+                    if now - last_telemetry_time >= 1.0:
+                        telem = self.bridge.get_telemetry()
+                        telem_json = json.dumps(telem)
+                        js_telem = f"if (window.updateTelemetry) window.updateTelemetry({telem_json});"
+                        self.window.evaluate_js(js_telem)
+                        last_telemetry_time = now
+
+                except Exception:
+                    pass
+
+            time.sleep(0.065)
+
+    def launch(self):
+        """Launches the Mark VII Tactical HUD Window."""
+        html_path = BASE_DIR / "gui" / "web" / "index.html"
+        if not html_path.exists():
+            raise FileNotFoundError(f"HUD HTML template not found at {html_path}")
+
+        # Start background threads
+        self.bg_thread = threading.Thread(target=self._run_async_loop, daemon=True)
+        self.bg_thread.start()
+
+        self.telemetry_thread = threading.Thread(target=self._telemetry_ticker, daemon=True)
+        self.telemetry_thread.start()
+
+        # Create Native Windows 11 Desktop Window (1440x900 as per Mark VII specs)
+        self.window = webview.create_window(
+            title="J.A.R.V.I.S. // MARK VII Tactical HUD",
+            url=str(html_path.resolve()),
+            js_api=self.bridge,
+            width=1440,
+            height=900,
+            min_size=(1024, 700),
+            background_color="#0A0E14",
+            frameless=False,
+            easy_drag=True
+        )
+        self.bridge.set_window(self.window)
+
+        # Starts the native WebView2 message loop on the main thread (blocking until closed)
+        webview.start(debug=False)
+        self.is_running = False
+        self.orchestrator.stop()
+
+
+def run_tactical_hud():
+    """Entry point to launch the tactical desktop HUD."""
+    app = JarvisHUDApp()
+    app.launch()
+
+
+if __name__ == "__main__":
+    run_tactical_hud()

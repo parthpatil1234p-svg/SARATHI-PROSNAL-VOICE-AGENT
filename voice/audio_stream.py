@@ -31,6 +31,8 @@ class AudioInputStream:
         self.audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=100)
         self.stream: sd.InputStream | None = None
         self.is_running = False
+        self.latest_rms: float = 0.0
+        self.latest_level: int = 0
 
     def _audio_callback(self, indata: np.ndarray, frames: int, time_info, status):
         """sounddevice callback invoked for every incoming audio block."""
@@ -39,6 +41,13 @@ class AudioInputStream:
 
         if not self.is_running:
             return
+
+        try:
+            rms = float(np.sqrt(np.mean(indata ** 2)))
+            self.latest_rms = rms
+            self.latest_level = max(0, min(100, int(rms * 450)))
+        except Exception:
+            pass
 
         # Clone and convert to 16-bit PCM integer or float array
         pcm_chunk = (indata.copy() * 32767).astype(np.int16)

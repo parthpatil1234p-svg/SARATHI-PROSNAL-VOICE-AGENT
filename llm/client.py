@@ -1,9 +1,11 @@
 """Ultra-fast LLM client with streaming and recursive tool calling."""
 
 import logging
+import time
 from collections.abc import AsyncGenerator
 
 from config.settings import settings
+from core.event_bus import event_bus
 from llm.memory import ConversationMemory
 from tools.registry import execute_tool, get_all_tool_schemas
 
@@ -164,7 +166,16 @@ class LLMClient:
                     call_id = call_data["id"]
 
                     logger.info(f"LLM requested tool execution: '{name}' with args '{raw_args}'")
+                    start_t = time.time()
                     result = await execute_tool(name, raw_args)
+                    latency_ms = round((time.time() - start_t) * 1000, 1)
+                    await event_bus.publish("tool_executed", {
+                        "name": name,
+                        "args": raw_args,
+                        "result": result,
+                        "call_id": call_id,
+                        "latency_ms": latency_ms
+                    })
                     memory.add_tool_call_turn(call_id, name, raw_args, str(result))
 
                 # Recursively stream the post-tool voice response

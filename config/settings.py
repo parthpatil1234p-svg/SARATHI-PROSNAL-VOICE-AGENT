@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     DEFAULT_LLM_PROVIDER: str = "groq"  # "groq" or "gemini"
     DEFAULT_LLM_MODEL: str = "openai/gpt-oss-20b"
     FALLBACK_LLM_MODEL: str = "qwen/qwen3.8-27b"
-    DEFAULT_GEMINI_MODEL: str = "gemini-2.0-flash"
+    DEFAULT_GEMINI_MODEL: str = "gemini-flash-latest"
 
     # STT Configuration
     STT_PROVIDER: str = Field(default="whisper")  # "deepgram" or "whisper"
