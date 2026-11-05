@@ -15,18 +15,12 @@ logger = logging.getLogger("JARVIS.OSTools")
 def set_system_volume(level: int) -> str:
     """Sets master volume percentage (0-100)."""
     try:
-        from ctypes import POINTER, cast
+        from pycaw.pycaw import AudioUtilities
 
-        from comtypes import CLSCTX_ALL
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-
+        spk = AudioUtilities.GetSpeakers()
         clamped = max(0, min(100, int(level)))
         scalar = clamped / 100.0
-        volume.SetMasterVolumeLevelScalar(scalar, None)
+        spk.EndpointVolume.SetMasterVolumeLevelScalar(scalar, None)
         return f"Master audio volume successfully adjusted to {clamped}%."
     except Exception as e:
         return f"Unable to adjust volume: {e}"
@@ -39,15 +33,10 @@ def set_system_volume(level: int) -> str:
 def mute_system(mute: bool = True) -> str:
     """Mutes or unmutes system sound."""
     try:
-        from ctypes import POINTER, cast
+        from pycaw.pycaw import AudioUtilities
 
-        from comtypes import CLSCTX_ALL
-        from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-
-        devices = AudioUtilities.GetSpeakers()
-        interface = devices.Activate(IAudioEndpointVolume._iid_, CLSCTX_ALL, None)
-        volume = cast(interface, POINTER(IAudioEndpointVolume))
-        volume.SetMute(int(mute), None)
+        spk = AudioUtilities.GetSpeakers()
+        spk.EndpointVolume.SetMute(int(mute), None)
         return "Audio muted, sir." if mute else "Audio unmuted, sir."
     except Exception as e:
         return f"Failed to toggle mute: {e}"

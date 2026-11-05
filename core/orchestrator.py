@@ -57,19 +57,35 @@ class AssistantOrchestrator:
         """Main asynchronous event loop for real-time voice interaction."""
         self.is_running = True
         self.audio_stream.start()
-        console.print(f"[bold cyan]⚡ {settings.ASSISTANT_NAME} initialized and listening for 'Hey Jarvis'...[/bold cyan]")
+        console.print(f"[bold cyan]⚡ {settings.ASSISTANT_NAME} initialized and listening...[/bold cyan]")
+
+        # Spoken confirmation that audio output is operational
+        try:
+            greeting = await self.tts.synthesize("All systems online, sir. I am listening.")
+            player.play_bytes(greeting)
+        except Exception as e:
+            logger.warning(f"Initial greeting audio warning: {e}")
 
         try:
             while self.is_running:
-                # 1. State: IDLE - Listening for Wake Word
+                # 1. State: IDLE - Listening for Wake Word or Direct Speech
                 if self.state_machine.current_state == AssistantState.IDLE:
                     chunk = self.audio_stream.read_chunk(timeout=0.1)
-                    if chunk is not None and self.wake_detector.process_chunk(chunk):
-                        console.print("[bold green]🔔 Wake word detected![/bold green]")
-                        self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
-                        await self._play_wake_chime()
-                        self.state_machine.transition_to(AssistantState.LISTENING)
-                        self.vad.reset()
+                    if chunk is not None:
+                        wake_triggered = self.wake_detector.process_chunk(chunk)
+                        has_speech = self.vad.is_speech(chunk)
+
+                        if wake_triggered:
+                            console.print("[bold green]🔔 Wake word detected![/bold green]")
+                            self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
+                            await self._play_wake_chime()
+                            self.state_machine.transition_to(AssistantState.LISTENING)
+                            self.vad.reset()
+                        elif has_speech:
+                            # User spoke directly without explicit wake word
+                            self.state_machine.transition_to(AssistantState.LISTENING)
+                            self.vad.speech_started = True
+                            self.vad.accumulated_speech_chunks.append(chunk)
 
                 # 2. State: LISTENING - Capturing user speech
                 elif self.state_machine.current_state == AssistantState.LISTENING:

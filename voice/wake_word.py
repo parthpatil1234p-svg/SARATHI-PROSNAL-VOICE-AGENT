@@ -15,7 +15,7 @@ class WakeWordDetector:
     Evaluates 16kHz audio chunks against the 'hey_jarvis' ONNX model.
     """
 
-    def __init__(self, threshold: float | None = None, model_name: str = "hey_jarvis", auto_load: bool = False):
+    def __init__(self, threshold: float | None = None, model_name: str = "hey_jarvis", auto_load: bool = True):
         self.threshold = threshold or settings.WAKE_WORD_THRESHOLD
         self.model_name = model_name
         self.oww_model = None

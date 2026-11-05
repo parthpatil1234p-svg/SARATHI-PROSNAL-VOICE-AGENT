@@ -416,7 +416,66 @@ class JarvisDesktopApp(ctk.CTk):
             button_color=COLOR_CYAN
         )
         opt_provider.set("Gemini" if settings.DEFAULT_LLM_PROVIDER == "gemini" else "Groq")
-        opt_provider.pack(anchor="w", padx=25, pady=(2, 15))
+        opt_provider.pack(anchor="w", padx=25, pady=(2, 10))
+
+        # Audio Output Device Selector & Test
+        import sounddevice as sd
+        output_devices = ["Default"]
+        device_map = {"Default": ""}
+        try:
+            for idx, dev in enumerate(sd.query_devices()):
+                if dev.get("max_output_channels", 0) > 0:
+                    label = f"[{idx}] {dev['name'][:30]}"
+                    output_devices.append(label)
+                    device_map[label] = str(idx)
+        except Exception:
+            pass
+
+        ctk.CTkLabel(modal, text="Audio Output Speaker / Device:", font=ctk.CTkFont(size=12)).pack(anchor="w", padx=25)
+        dev_frame = ctk.CTkFrame(modal, fg_color="transparent")
+        dev_frame.pack(fill="x", padx=25, pady=(2, 12))
+
+        opt_device = ctk.CTkOptionMenu(
+            dev_frame,
+            values=output_devices,
+            fg_color="#1E293B",
+            button_color="#334155",
+            width=320
+        )
+        current_dev_str = str(settings.AUDIO_OUTPUT_DEVICE_INDEX) if settings.AUDIO_OUTPUT_DEVICE_INDEX else ""
+        matched_label = "Default"
+        for lbl, d_idx in device_map.items():
+            if d_idx == current_dev_str:
+                matched_label = lbl
+                break
+        opt_device.set(matched_label)
+        opt_device.pack(side="left")
+
+        def test_audio_output():
+            chosen = opt_device.get()
+            dev_idx = device_map.get(chosen, "")
+            settings.AUDIO_OUTPUT_DEVICE_INDEX = dev_idx or None
+
+            def run_test():
+                try:
+                    audio = asyncio.run(self.orchestrator.tts.synthesize("Voice output test successful, sir. All audio systems operational."))
+                    from voice.player import player
+                    player.play_bytes(audio)
+                except Exception as exc:
+                    err = str(exc)
+                    self.after(0, lambda: messagebox.showerror("Audio Test Error", err))
+
+            threading.Thread(target=run_test, daemon=True).start()
+
+        btn_test_audio = ctk.CTkButton(
+            dev_frame,
+            text="🔊 TEST VOICE",
+            command=test_audio_output,
+            fg_color=COLOR_CYAN_DIM,
+            hover_color=COLOR_CYAN,
+            width=130
+        )
+        btn_test_audio.pack(side="left", padx=10)
 
         # Divider
         ctk.CTkFrame(modal, height=1, fg_color="#334155").pack(fill="x", padx=25, pady=10)
@@ -488,6 +547,8 @@ class JarvisDesktopApp(ctk.CTk):
             new_groq = entry_groq.get().strip()
             new_gemini = entry_gemini.get().strip()
             new_provider = opt_provider.get().lower()
+            chosen_dev = opt_device.get()
+            new_dev_idx = device_map.get(chosen_dev, "")
 
             env_path = settings.ASSETS_DIR.parent / ".env"
             with open(env_path, "w", encoding="utf-8") as f:
@@ -496,10 +557,12 @@ class JarvisDesktopApp(ctk.CTk):
                 f.write(f'DEFAULT_LLM_PROVIDER="{new_provider}"\n')
                 f.write(f'TTS_PROVIDER="{settings.TTS_PROVIDER}"\n')
                 f.write(f'ELEVENLABS_VOICE_ID="{settings.ELEVENLABS_VOICE_ID}"\n')
+                f.write(f'AUDIO_OUTPUT_DEVICE_INDEX="{new_dev_idx}"\n')
 
             settings.GROQ_API_KEY = new_groq
             settings.GEMINI_API_KEY = new_gemini
             settings.DEFAULT_LLM_PROVIDER = new_provider
+            settings.AUDIO_OUTPUT_DEVICE_INDEX = new_dev_idx or None
             self.orchestrator.llm._init_client()
 
             messagebox.showinfo("Saved", "Configuration updated successfully!")
