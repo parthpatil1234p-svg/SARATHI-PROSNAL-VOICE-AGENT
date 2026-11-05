@@ -16,10 +16,12 @@ class LLMClient:
     Handles streaming token delivery, JSON tool calling, and recursive observation responses.
     """
 
-    def __init__(self, model: str | None = None):
-        self.model = model or settings.DEFAULT_LLM_MODEL
+    def __init__(self, model: str | None = None, provider: str | None = None):
+        self.provider = (provider or settings.DEFAULT_LLM_PROVIDER).lower()
+        self.model = model or (settings.DEFAULT_GEMINI_MODEL if self.provider == "gemini" else settings.DEFAULT_LLM_MODEL)
         self._groq_client = None
         self._openai_client = None
+        self._gemini_client = None
         self._init_client()
 
     def _init_client(self):
@@ -31,7 +33,15 @@ class LLMClient:
             except Exception as e:
                 logger.warning(f"Groq client init error: {e}")
 
-        if settings.OPENAI_API_KEY and not self._groq_client:
+        if settings.GEMINI_API_KEY:
+            try:
+                from google import genai
+                self._gemini_client = genai.Client(api_key=settings.GEMINI_API_KEY)
+                logger.info("Google Gemini client initialized.")
+            except Exception as e:
+                logger.warning(f"Gemini client init error: {e}")
+
+        if settings.OPENAI_API_KEY and not self._groq_client and not self._gemini_client:
             try:
                 from openai import AsyncOpenAI
                 self._openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
@@ -50,8 +60,14 @@ class LLMClient:
         tools = get_all_tool_schemas()
         messages = memory.get_messages()
 
-        if self._groq_client:
+        if self.provider == "gemini" and self._gemini_client:
+            async for token in self._stream_gemini(memory):
+                yield token
+        elif self._groq_client:
             async for token in self._stream_groq(memory, messages, tools):
+                yield token
+        elif self._gemini_client:
+            async for token in self._stream_gemini(memory):
                 yield token
         elif self._openai_client:
             async for token in self._stream_openai(memory, messages, tools):
@@ -60,6 +76,42 @@ class LLMClient:
             # Sane local offline fallback for development without keys
             for token in self._offline_fallback_generator(memory):
                 yield token
+
+    async def _stream_gemini(self, memory: ConversationMemory) -> AsyncGenerator[str, None]:
+        """Streams responses using Google Gemini API."""
+        import asyncio
+        try:
+            # Prepare contents from memory
+            last_msg = memory.messages[-1].get("content", "") if memory.messages else ""
+            system_instruction = memory.messages[0].get("content", "") if memory.messages else ""
+
+            # Check for direct tool intents
+            if "cpu" in last_msg.lower() or "diagnostic" in last_msg.lower():
+                from tools.system_tools import get_system_diagnostics
+                diag = get_system_diagnostics()
+                prompt = (
+                    f"System Instruction: {system_instruction}\n"
+                    f"Diagnostics Data: {diag}\n"
+                    f"User asked: {last_msg}\n"
+                    "Provide a crisp, formal spoken response in character as J.A.R.V.I.S. No markdown."
+                )
+            else:
+                prompt = f"System Instruction: {system_instruction}\nUser: {last_msg}"
+
+            response = await asyncio.to_thread(
+                self._gemini_client.models.generate_content,
+                model=settings.DEFAULT_GEMINI_MODEL,
+                contents=prompt
+            )
+
+            text = response.text or ""
+            memory.add_assistant_message(text)
+            for chunk in text.split(" "):
+                yield chunk + " "
+
+        except Exception as e:
+            logger.error(f"Gemini streaming error: {e}")
+            yield "Apologies, sir. I encountered a communication error with my Gemini cognitive service."
 
     async def _stream_groq(
         self, memory: ConversationMemory, messages: list[dict], tools: list[dict]

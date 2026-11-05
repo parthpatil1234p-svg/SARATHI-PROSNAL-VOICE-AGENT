@@ -73,10 +73,18 @@ async def run_interactive_cli(orchestrator: AssistantOrchestrator):
 
 async def main():
     parser = argparse.ArgumentParser(description="J.A.R.V.I.S. AI Voice Assistant")
+    parser.add_argument("--gui", action="store_true", help="Launch the Desktop GUI Application")
     parser.add_argument("--cli", action="store_true", help="Run in interactive CLI mode (Type prompt, hear voice)")
+    parser.add_argument("--voice", action="store_true", help="Run headless in continuous background voice mode")
     parser.add_argument("--devices", action="store_true", help="List all audio input and output devices")
     parser.add_argument("--tools", action="store_true", help="List all registered OS and diagnostic tools")
     args = parser.parse_args()
+
+    # If --gui or no arguments passed, launch the sleek Desktop GUI HUD
+    if args.gui or (not args.cli and not args.voice and not args.devices and not args.tools):
+        from gui.app import run_gui
+        run_gui()
+        return
 
     display_banner()
 
