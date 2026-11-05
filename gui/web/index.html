@@ -458,7 +458,7 @@
         <span class="font-label text-[9px] text-primary px-2 uppercase select-none tracking-widest">[PROMPT &gt;_]</span>
         <input class="flex-1 bg-transparent border-none outline-none font-telemetry text-xs text-on-surface placeholder:text-outline" id="tactical-input" placeholder="Ask J.A.R.V.I.S. or type a command... (e.g. 'What is my CPU usage?', 'Set volume to 40%')" type="text"/>
         <div class="flex items-center gap-1.5">
-          <button class="w-7 h-7 rounded bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary-container transition-colors" onclick="toggleVoiceMode()" title="Toggle Voice Listening">
+          <button class="w-7 h-7 rounded bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary-container transition-colors" onclick="triggerManualWake()" title="Push-to-Talk / Wake J.A.R.V.I.S.">
             <span class="material-symbols-outlined text-[16px]">mic</span>
           </button>
           <button class="px-3 py-1 bg-primary-container text-on-primary-container font-headline text-xs font-bold uppercase rounded transition-all hover:brightness-110 active:scale-95" onclick="submitPrompt()">
@@ -939,6 +939,14 @@
       }
       setAssistantState("INTERRUPTED");
       setTimeout(() => switchView('cockpit'), 500);
+    }
+
+    // Manual wake pulse (Push-to-talk from HUD)
+    function triggerManualWake() {
+      if (window.pywebview?.api) {
+        window.pywebview.api.trigger_wake();
+      }
+      setAssistantState("LISTENING");
     }
 
     // Quick Action Handler

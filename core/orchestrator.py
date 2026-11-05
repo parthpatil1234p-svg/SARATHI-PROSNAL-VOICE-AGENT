@@ -53,6 +53,7 @@ class AssistantOrchestrator:
             chunk_size=settings.CHUNK_SIZE
         )
         self.is_running = False
+        self.active_conversation_timeout: float = 0.0
         self.state_machine.add_listener(self._notify_state_change)
 
     def _notify_state_change(self, old_state: AssistantState, new_state: AssistantState):
@@ -78,21 +79,24 @@ class AssistantOrchestrator:
 
         try:
             while self.is_running:
-                # 1. State: IDLE - Listening for Wake Word or Direct Speech
+                # 1. State: IDLE - Strictly listening for Wake Word ("Hey Jarvis") or active dialogue window
                 if self.state_machine.current_state == AssistantState.IDLE:
                     chunk = self.audio_stream.read_chunk(timeout=0.1)
                     if chunk is not None:
                         wake_triggered = self.wake_detector.process_chunk(chunk)
-                        has_speech = self.vad.is_speech(chunk)
+                        in_dialogue_window = time.time() < self.active_conversation_timeout
+                        # When outside dialogue window, strictly require wake word to prevent noise false triggers
+                        has_speech = self.vad.is_speech(chunk) if in_dialogue_window else False
 
                         if wake_triggered:
                             console.print("[bold green]🔔 Wake word detected![/bold green]")
+                            self.active_conversation_timeout = time.time() + 12.0
                             self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
                             await self._play_wake_chime()
                             self.state_machine.transition_to(AssistantState.LISTENING)
                             self.vad.reset()
                         elif has_speech:
-                            # User spoke directly without explicit wake word
+                            # User continued speaking naturally within the active conversation window
                             self.state_machine.transition_to(AssistantState.LISTENING)
                             self.vad.speech_started = True
                             self.vad.accumulated_speech_chunks.append(chunk)
@@ -139,6 +143,18 @@ class AssistantOrchestrator:
             return
 
         stt_latency = (time.time() - start_time) * 1000
+        cleaned = transcript.strip().lower().rstrip(".,!?")
+
+        # Blacklist background hiss artifacts and common Whisper hallucinations
+        common_hallucinations = {
+            "", "you", "thank you", "thank you.", "thanks", "thanks for watching",
+            "bye", "subtitles", "subtitle", "hello", "hi", "yes", "no", "um", "uh", ".", "..."
+        }
+        if cleaned in common_hallucinations or len(cleaned) < 2:
+            console.print(f"[dim]Filtered out acoustic noise artifact: '{transcript}'[/dim]")
+            self.state_machine.transition_to(AssistantState.IDLE)
+            return
+
         console.print(f"[bold white]User:[/bold white] {transcript} [dim]({stt_latency:.0f}ms STT)[/dim]")
         await event_bus.publish("user_speech", {"text": transcript, "latency_ms": round(stt_latency, 1)})
 
@@ -208,6 +224,18 @@ class AssistantOrchestrator:
             console.print()
         finally:
             if self.state_machine.current_state != AssistantState.INTERRUPTED:
+                # Grant 8-second continuous conversational follow-up window
+                self.active_conversation_timeout = time.time() + 8.0
+
+                # Acoustic self-audio suppression: wait 300ms and drain any speaker feedback from buffer
+                await asyncio.sleep(0.3)
+                while not self.audio_stream.audio_queue.empty():
+                    try:
+                        self.audio_stream.audio_queue.get_nowait()
+                    except Exception:
+                        break
+                self.vad.reset()
+
                 self.state_machine.transition_to(AssistantState.IDLE)
 
     async def _play_wake_chime(self):

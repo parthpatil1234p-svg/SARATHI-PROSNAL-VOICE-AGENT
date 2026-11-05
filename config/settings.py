@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     WAKE_WORD_ENGINE: str = "openwakeword"
     WAKE_WORD_NAME: str = "hey_jarvis"
     PICOVOICE_ACCESS_KEY: str = Field(default="")
-    WAKE_WORD_THRESHOLD: float = 0.60
+    WAKE_WORD_THRESHOLD: float = 0.50
 
     # Audio Stream Parameters
     SAMPLE_RATE: int = 16000
@@ -52,9 +52,9 @@ class Settings(BaseSettings):
     AUDIO_INPUT_DEVICE_INDEX: str | None = None
     AUDIO_OUTPUT_DEVICE_INDEX: str | None = None
 
-    # VAD & Turn-Taking (Aggressive 220ms silence timeout for minimal latency)
-    VOICE_ACTIVITY_THRESHOLD: float = 0.015
-    SILENCE_TIMEOUT_MS: int = 220  # milliseconds of silence to trigger end-of-speech
+    # VAD & Turn-Taking (Calibrated for high accuracy and zero false triggers)
+    VOICE_ACTIVITY_THRESHOLD: float = 0.028
+    SILENCE_TIMEOUT_MS: int = 450  # 450ms natural pause before finalizing speech turn
 
     # Vision & Screen Analysis
     VISION_MODEL: str = "llama-3.2-11b-vision-preview"

@@ -111,6 +111,23 @@ class JarvisWebBridge:
         logger.info("Barge-in triggered via HUD.")
         return {"status": "interrupted"}
 
+    def trigger_wake(self) -> dict[str, Any]:
+        """Manually forces wake detection as if user clicked push-to-talk mic."""
+        if self.loop and self.loop.is_running():
+            from core.state_machine import AssistantState
+
+            async def _wake_coro():
+                self.orchestrator.active_conversation_timeout = time.time() + 15.0
+                self.orchestrator.state_machine.transition_to(AssistantState.WAKE_DETECTED)
+                await self.orchestrator._play_wake_chime()
+                self.orchestrator.state_machine.transition_to(AssistantState.LISTENING)
+                self.orchestrator.vad.reset()
+
+            asyncio.run_coroutine_threadsafe(_wake_coro(), self.loop)
+            logger.info("Manual wake pulse triggered via HUD mic.")
+            return {"status": "listening"}
+        return {"status": "error"}
+
     # -------------------------------------------------------------
     # Quick Trigger Actions
     # -------------------------------------------------------------
