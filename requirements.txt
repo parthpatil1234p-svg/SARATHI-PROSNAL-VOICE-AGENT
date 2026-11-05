@@ -1,0 +1,45 @@
+# Core Runtime & Async
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-dotenv>=1.0.1
+rich>=13.7.1
+colorama>=0.4.6
+
+# Audio Processing & Capture
+sounddevice>=0.4.6
+soundfile>=0.12.1
+numpy>=1.26.0
+scipy>=1.13.0
+
+# Wake Word & VAD
+openwakeword>=0.6.0
+onnxruntime>=1.17.0
+
+# Speech-to-Text (STT)
+deepgram-sdk>=3.2.0
+faster-whisper>=1.0.0
+
+# Brain / LLM
+groq>=0.9.0
+openai>=1.30.0
+
+# Text-to-Speech (TTS)
+edge-tts>=6.1.12
+elevenlabs>=1.0.0
+
+# Windows 11 Action Engine & Hardware Diagnostics
+psutil>=5.9.8
+pycaw>=20240209
+comtypes>=1.4.1
+pywin32>=306
+mss>=9.0.1
+Pillow>=10.3.0
+
+# HTTP & Async Network
+httpx>=0.27.0
+aiohttp>=3.9.5
+
+# Development & Testing
+pytest>=8.2.0
+pytest-asyncio>=0.23.0
+ruff>=0.4.0
