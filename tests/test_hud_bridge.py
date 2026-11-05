@@ -29,7 +29,7 @@ def test_bridge_initial_data(bridge):
     assert "settings" in init_data
     assert "audio_devices" in init_data
     assert "telemetry" in init_data
-    assert init_data["settings"]["assistant_name"] == "JARVIS"
+    assert init_data["settings"]["assistant_name"] == "SARATHI"
     assert "inputs" in init_data["audio_devices"]
     assert "outputs" in init_data["audio_devices"]
 

@@ -106,7 +106,7 @@ class JarvisHUDApp:
 
         # Create Native Windows 11 Desktop Window (1440x900 as per Mark VII specs)
         self.window = webview.create_window(
-            title="J.A.R.V.I.S. // MARK VII Tactical HUD",
+            title="SARATHI // Autonomous Desktop AI Assistant",
             url=str(html_path.resolve()),
             js_api=self.bridge,
             width=1440,

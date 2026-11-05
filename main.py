@@ -35,14 +35,14 @@ console = Console(force_terminal=True)
 
 
 def display_banner():
-    """Prints the J.A.R.V.I.S. futuristic console header."""
+    """Prints the SARATHI futuristic console header."""
     header = (
         "[bold cyan]"
-        "  === J.A.R.V.I.S. ===\n"
-        "  Just A Rather Very Intelligent System\n"
+        "  === S.A.R.A.T.H.I. ===\n"
+        "  Autonomous Desktop AI Voice Assistant (Windows 11)\n"
         "[/bold cyan]\n"
-        f"[bold white]Autonomous AI Desktop Voice Assistant (Windows 11)[/bold white]\n"
-        f"[dim]Persona: Paul Bettany (British) | Model: {settings.DEFAULT_LLM_MODEL} | TTS: {settings.TTS_PROVIDER}[/dim]"
+        f"[bold white]Your Loyal Navigator & Desktop Companion[/bold white]\n"
+        f"[dim]Model: {settings.DEFAULT_LLM_MODEL} | TTS: {settings.TTS_PROVIDER} | Persona: {settings.ASSISTANT_NAME}[/dim]"
     )
     console.print(Panel(header, border_style="cyan", expand=False))
 

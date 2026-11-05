@@ -1,6 +1,8 @@
 """Wake Word Detection engine utilizing openWakeWord with fallback support."""
 
 import logging
+import sys
+from pathlib import Path
 
 import numpy as np
 
@@ -30,8 +32,18 @@ class WakeWordDetector:
         try:
             from openwakeword.model import Model
             logger.info("Initializing openWakeWord model...")
+
+            candidates = []
+            if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+                meipass_model = Path(sys._MEIPASS) / "openwakeword" / "resources" / "models" / f"{self.model_name}_v0.1.onnx"
+                if meipass_model.exists():
+                    candidates.append(str(meipass_model))
+
+            if not candidates:
+                candidates.append(self.model_name)
+
             self.oww_model = Model(
-                wakeword_models=[self.model_name],
+                wakeword_models=candidates,
                 inference_framework="onnx"
             )
             logger.info(f"openWakeWord loaded model '{self.model_name}' successfully.")

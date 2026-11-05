@@ -1,22 +1,35 @@
 """Application settings using Pydantic Settings."""
 
+import sys
 from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+# Base directory: handles both live development and PyInstaller frozen executable
+if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+    BUNDLE_DIR = Path(sys._MEIPASS)
+    EXE_DIR = Path(sys.executable).parent
+else:
+    BUNDLE_DIR = Path(__file__).resolve().parent.parent
+    EXE_DIR = BUNDLE_DIR
+
+BASE_DIR = BUNDLE_DIR
+
+# Determine .env location: prefer .env next to executable if present, else bundled
+_env_candidate = EXE_DIR / ".env"
+ENV_FILE_PATH = str(_env_candidate if _env_candidate.exists() else (BUNDLE_DIR / ".env"))
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=str(BASE_DIR / ".env"),
+        env_file=ENV_FILE_PATH,
         env_file_encoding="utf-8",
         extra="ignore"
     )
 
     # Assistant Persona
-    ASSISTANT_NAME: str = "JARVIS"
+    ASSISTANT_NAME: str = "SARATHI"
     USER_NAME: str = "Sir"
 
     # LLM Configuration

@@ -9,7 +9,7 @@ from typing import Any
 
 import psutil
 
-from config.settings import BASE_DIR, settings
+from config.settings import BASE_DIR, EXE_DIR, settings
 from core.orchestrator import AssistantOrchestrator
 from tools.os_tools import mute_system, set_system_volume
 from tools.system_tools import get_system_diagnostics, purge_system_cache
@@ -320,7 +320,7 @@ class JarvisWebBridge:
     def save_settings(self, cfg: dict[str, Any]) -> dict[str, Any]:
         """Saves configuration changes to .env and updates active runtime."""
         try:
-            env_path = BASE_DIR / ".env"
+            env_path = EXE_DIR / ".env"
             env_vars: dict[str, str] = {}
             if env_path.exists():
                 with open(env_path, encoding="utf-8") as f:

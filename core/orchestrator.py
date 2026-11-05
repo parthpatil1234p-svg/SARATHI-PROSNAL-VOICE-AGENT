@@ -72,7 +72,7 @@ class AssistantOrchestrator:
 
         # Spoken confirmation that audio output is operational
         try:
-            greeting = await self.tts.synthesize("All systems online, sir. I am listening.")
+            greeting = await self.tts.synthesize("All systems online, sir. Sārathi is at your command.")
             player.play_bytes(greeting)
         except Exception as e:
             logger.warning(f"Initial greeting audio warning: {e}")
