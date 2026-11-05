@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.tactical-grid-bg{background-image:linear-gradient(to right,rgba(59,73,76,0.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(59,73,76,0.08) 1px,transparent 1px);background-size:24px 24px;}.scanline-overlay{background:linear-gradient(rgba(10,14,20,0) 50%,rgba(0,0,0,0.25) 50%);background-size:100% 3px;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed-dim": "#ffba27", "on-surface": "#dfe2eb", "surface-container-highest": "#31353c", "surface-tint": "#00daf3", "on-error-container": "#ffdad6", "on-error": "#690005", "on-primary": "#00363d", "surface-container-lowest": "#0a0e14", "on-background": "#dfe2eb", "surface-container": "#1c2026", "tertiary": "#ffeacc", "surface-variant": "#31353c", "surface": "#10141a", "tertiary-container": "#ffc863", "error-container": "#93000a", "surface-container-low": "#181c22", "primary-fixed": "#9cf0ff", "on-secondary-fixed": "#00210f", "on-secondary-fixed-variant": "#00522e", "on-primary-fixed": "#001f24", "inverse-surface": "#dfe2eb", "on-tertiary-container": "#765300", "secondary": "#f5fff4", "secondary-fixed-dim": "#00e388", "inverse-on-surface": "#2d3137", "on-secondary-container": "#007241", "inverse-primary": "#006875", "surface-dim": "#10141a", "background": "#10141a", "secondary-container": "#1fff9b", "on-surface-variant": "#bac9cc", "primary-fixed-dim": "#00daf3", "tertiary-fixed": "#ffdea9", "error": "#ffb4ab", "on-tertiary": "#422c00", "on-secondary": "#00391e", "outline-variant": "#3b494c", "outline": "#849396", "secondary-fixed": "#58ffa5", "on-tertiary-fixed-variant": "#5e4100", "primary": "#c3f5ff", "surface-container-high": "#262a31", "surface-bright": "#353940", "primary-container": "#00e5ff", "on-primary-container": "#00626e", "on-primary-fixed-variant": "#004f58", "on-tertiary-fixed": "#271900" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-md": "0.75rem", "space-lg": "1rem", "gutter": "0.75rem", "space-xs": "0.25rem", "margin": "1rem", "space-xl": "1.5rem", "space-sm": "0.375rem" }, "fontFamily": { "headline-md": [ "Geist" ], "headline-lg": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "body-lg": [ "Geist" ], "body-md": [ "Geist" ], "body-sm": [ "Geist" ], "headline-sm": [ "Geist" ], "telemetry-sm": [ "JetBrains Mono" ], "telemetry-md": [ "JetBrains Mono" ], "headline-xl": [ "Geist" ], "telemetry-lg": [ "JetBrains Mono" ] }, "fontSize": { "headline-md": [ "16px", { "lineHeight": "22px", "letterSpacing": "0.05em", "fontWeight": "600" } ], "headline-lg": [ "20px", { "lineHeight": "26px", "letterSpacing": "0.06em", "fontWeight": "700" } ], "label-caps": [ "9px", { "lineHeight": "12px", "letterSpacing": "0.12em", "fontWeight": "700" } ], "body-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-md": [ "12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-sm": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-sm": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" } ], "telemetry-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "500" } ], "telemetry-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" } ], "headline-xl": [ "28px", { "lineHeight": "34px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "telemetry-lg": [ "18px", { "lineHeight": "22px", "letterSpacing": "0.02em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased select-none"><div class="fixed inset-0 pointer-events-none tactical-grid-bg opacity-40 z-0"></div><div class="fixed inset-0 pointer-events-none scanline-overlay opacity-30 z-50"></div><header class="fixed top-0 left-0 right-0 z-40 bg-surface-container-low/95 backdrop-blur-md"><div class="h-10 w-full px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs text-primary"><span class="material-symbols-outlined text-[16px]">token</span><span class="font-label-caps text-label-caps uppercase tracking-wider text-primary">STARK IND</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">|</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant font-medium tracking-tight">J.A.R.V.I.S. // MARK VII - Tactical Environment [W-11]</span><div class="flex items-center gap-space-xs ml-space-sm px-space-xs py-0.5 rounded bg-surface-container-highest"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span><span class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase">SYS:ONLINE</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">wifi_tethering</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">12ms</span></div><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">schedule</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">14:28:09 ZULU</span></div><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">mic</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">ARRAY_01 ACTIVE</span></div></div><nav class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="px-space-sm py-0.5 rounded transition-colors uppercase bg-primary-container text-on-primary-container font-semibold" data-path="tactical-cockpit" href="#">Cockpit</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="telemetry-diagnostics" href="#">Telemetry</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="execution-subroutines" href="#">Execution</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="neural-architecture" href="#">Neural Core</a></nav><div class="flex items-center gap-space-xs"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex items-center ml-space-sm bg-surface-container-highest rounded overflow-hidden"><button aria-label="Minimize" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[14px]">minimize</span></button><button aria-label="Maximize" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[13px]">check_box_outline_blank</span></button><button aria-label="Close" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div></div></div></header><aside class="fixed left-0 top-10 bottom-7 w-64 bg-surface-container-low/80 backdrop-blur-xl z-30 flex flex-col justify-between"><div class="p-space-md"><div class="flex items-center justify-between pb-space-sm"><span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">// SYSTEM FLANK</span><span class="font-telemetry-sm text-telemetry-sm text-primary">NODE:MK7</span></div><div class="p-space-sm bg-surface-container rounded mb-space-md"><div class="flex items-center justify-between mb-space-xs"><span class="font-label-caps text-label-caps text-on-surface-variant">NEURAL LOAD</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">38.4%</span></div><div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden"><div class="h-full bg-secondary-fixed-dim w-[38%]"></div></div></div><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="flex items-center gap-space-sm px-space-sm py-2 rounded transition-all bg-primary-container text-on-primary-container font-semibold" data-path="tactical-cockpit" href="#"><span class="material-symbols-outlined text-[18px]">radar</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Cockpit HUD</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="telemetry-diagnostics" href="#"><span class="material-symbols-outlined text-[18px]">insights</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Telemetry</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="execution-subroutines" href="#"><span class="material-symbols-outlined text-[18px]">terminal</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Execution Bay</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="neural-architecture" href="#"><span class="material-symbols-outlined text-[18px]">neurology</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Neural Mesh</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="sensor-matrix" href="#"><span class="material-symbols-outlined text-[18px]">sensors</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Sensors</span></a></nav></div><div class="p-space-md bg-surface-container-lowest/50"><div class="flex items-center justify-between text-outline mb-space-xs"><span class="font-label-caps text-label-caps uppercase">STARK CLOUD SYNC</span><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span></div><div class="font-telemetry-sm text-telemetry-sm text-on-surface-variant truncate">NODE://STARK.INTERNAL.07</div></div></aside><div class="pl-64"><main class="relative pt-10 pb-7 min-h-screen w-full px-space-md z-10"><div class="flex flex-col w-full text-on-surface">
+<div class="grid grid-cols-12 gap-gutter w-full">
+<!-- ================= ZONE 1: LEFT TELEMETRY SIDEBAR (Col 1-3) ================= -->
+<div class="col-span-12 lg:col-span-3 flex flex-col gap-space-sm">
+<!-- System Ident & Build Status -->
+<div class="relative bg-surface-container-low/90 backdrop-blur-md p-space-md rounded-lg shadow-xl overflow-hidden">
+<div class="absolute -right-6 -top-6 w-24 h-24 bg-primary-container/10 rounded-full blur-xl pointer-events-none"></div>
+<div class="flex items-center justify-between">
+<div>
+<div class="flex items-center gap-space-xs">
+<span class="font-headline-md text-headline-md tracking-wider text-primary">J.A.R.V.I.S.</span>
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim bg-secondary-container/10 px-1 py-0.5 rounded">MK VII</span>
+</div>
+<p class="font-label-caps text-label-caps text-on-surface-variant tracking-widest mt-0.5">BUILD 7.4.2 // SYS-LEVEL 0</p>
+</div>
+<div class="h-2 w-2 rounded-full bg-secondary-fixed-dim animate-ping"></div>
+</div>
+<!-- Status Badge -->
+<div class="mt-space-md p-space-xs rounded bg-surface-container-highest/60 flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_currentColor]"></span>
+<span class="font-label-caps text-label-caps tracking-widest text-secondary-fixed-dim uppercase">ACTIVE // LISTENING WAKE WORD</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">48kHz</span>
+</div>
+<!-- Voice Mode Master Switch -->
+<button class="mt-space-sm w-full py-2 px-space-md bg-primary-container text-on-primary-container font-headline-sm text-headline-sm uppercase tracking-widest flex items-center justify-center gap-space-sm rounded transition-all duration-200 hover:brightness-110 active:scale-[0.99] shadow-[0_0_16px_rgba(0,229,255,0.4)]" id="toggle-voice-btn">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>VOICE MODE: ENGAGED</span>
+</button>
+</div>
+<!-- Real-time Hardware Telemetry Pods -->
+<div class="bg-surface-container-low/80 backdrop-blur-md p-space-md rounded-lg shadow-xl flex flex-col gap-space-md">
+<!-- CPU Load Metric -->
+<div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-caps text-label-caps uppercase tracking-wider">// HARDWARE: CPU MATRIX</span>
+<span class="font-telemetry-sm text-telemetry-sm text-primary">4.82 GHz</span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs">
+<span class="font-telemetry-lg text-telemetry-lg text-primary tracking-tight font-bold">53.4%</span>
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">12 CORES ACTIVE</span>
+</div>
+<!-- Micro-Grid 12-Core Visualizer -->
+<div class="grid grid-cols-6 gap-1 mt-space-xs">
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[62%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[48%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[79%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[55%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[33%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[41%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[88%] bg-secondary-fixed-dim"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[65%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[51%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[39%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[44%] bg-primary-container"></div></div>
+<div class="h-4 bg-surface-container-highest rounded-xs relative overflow-hidden"><div class="absolute bottom-0 w-full h-[58%] bg-primary-container"></div></div>
+</div>
+</div>
+<div class="h-px bg-surface-container-highest"></div>
+<!-- RAM Allocation Metric -->
+<div>
+<div class="flex items-center justify-between text-on-surface-variant">
+<span class="font-label-caps text-label-caps uppercase tracking-wider">// MEMORY: LPDDR5</span>
+<span class="font-telemetry-sm text-telemetry-sm text-tertiary-fixed-dim">83.9%</span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs">
+<span class="font-telemetry-md text-telemetry-md text-on-surface">12.8 GB <span class="text-on-surface-variant text-telemetry-sm">/ 15.2 GB</span></span>
+<span class="font-label-caps text-label-caps text-tertiary-fixed-dim tracking-wider">LOAD HIGH</span>
+</div>
+<!-- Segmented Memory Bar -->
+<div class="grid grid-cols-10 gap-0.5 mt-space-xs h-2 bg-surface-container-highest p-0.5 rounded">
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-primary-container rounded-xs"></div>
+<div class="bg-tertiary-fixed-dim rounded-xs"></div>
+<div class="bg-surface-container-low rounded-xs"></div>
+</div>
+</div>
+<div class="h-px bg-surface-container-highest"></div>
+<!-- Power & Thermal -->
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="p-space-xs rounded bg-surface-container">
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase">// POWER BUS</div>
+<div class="font-telemetry-md text-telemetry-md text-secondary-fixed-dim font-bold mt-0.5">99% AC</div>
+<div class="font-telemetry-sm text-telemetry-sm text-outline mt-0.5">240W 19.8V</div>
+</div>
+<div class="p-space-xs rounded bg-surface-container">
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase">// THERMAL CORE</div>
+<div class="font-telemetry-md text-telemetry-md text-primary font-bold mt-0.5">48.2°C</div>
+<div class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim mt-0.5">FAN: 1420 RPM</div>
+</div>
+</div>
+<div class="h-px bg-surface-container-highest"></div>
+<!-- Local Storage Warning Card -->
+<div class="p-space-sm rounded bg-surface-container relative">
+<div class="flex items-center justify-between">
+<div class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">// NVME DRIVE C:</div>
+<span class="font-label-caps text-label-caps text-error bg-error-container/40 px-1 py-0.5 rounded tracking-wide animate-pulse">98% USED</span>
+</div>
+<div class="flex items-baseline justify-between mt-space-xs">
+<span class="font-telemetry-md text-telemetry-md text-error font-bold">2.7 GB FREE</span>
+<span class="font-telemetry-sm text-telemetry-sm text-outline">TOTAL: 512 GB</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded mt-space-xs overflow-hidden">
+<div class="h-full bg-error rounded" style="width: 98%;"></div>
+</div>
+</div>
+<!-- System Uptime & Latency Metrics -->
+<div class="flex items-center justify-between text-on-surface-variant p-space-xs bg-surface-container-highest/40 rounded">
+<div>
+<div class="font-label-caps text-label-caps uppercase">// UPTIME</div>
+<div class="font-telemetry-sm text-telemetry-sm text-on-surface font-semibold">33.3 HOURS</div>
+</div>
+<div class="text-right">
+<div class="font-label-caps text-label-caps uppercase">// NEURAL SYNC</div>
+<div class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim font-semibold">8.4ms PKT</div>
+</div>
+</div>
+</div>
+<!-- Config Trigger Button -->
+<button class="w-full py-2 px-space-md bg-surface-container-high hover:bg-surface-bright text-on-surface hover:text-primary transition-all rounded flex items-center justify-center gap-space-sm font-headline-sm text-headline-sm uppercase tracking-wider">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+<span>Configuration &amp; Voice Cloner</span>
+</button>
+</div>
+<!-- ================= ZONE 2: CENTER HOLOGRAPHIC ARC REACTOR (Col 4-8) ================= -->
+<div class="col-span-12 lg:col-span-5 flex flex-col gap-space-sm">
+<!-- Holographic Reactor Core Card -->
+<div class="relative bg-surface-container-low/80 backdrop-blur-xl p-space-md rounded-lg shadow-2xl flex flex-col items-center justify-center overflow-hidden min-h-[380px]">
+<!-- Tech Corner Markers -->
+<div class="absolute top-2 left-2 font-label-caps text-label-caps text-outline tracking-widest">+ 00.28 // LAT</div>
+<div class="absolute top-2 right-2 font-label-caps text-label-caps text-outline tracking-widest">AZIMUTH: 274° +</div>
+<div class="absolute bottom-2 left-2 font-label-caps text-label-caps text-outline tracking-widest">+ ARC-7: CORE STABLE</div>
+<div class="absolute bottom-2 right-2 font-label-caps text-label-caps text-outline tracking-widest">Q-FLUX: 99.8% +</div>
+<!-- Central Glow Halo -->
+<div class="absolute w-64 h-64 bg-primary-container/15 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute w-32 h-32 bg-secondary-container/10 rounded-full blur-xl pointer-events-none"></div>
+<!-- Concentric Arc Reactor SVG Construction -->
+<div class="relative w-64 h-64 flex items-center justify-center">
+<!-- Outer Degree Ring (SVG) -->
+<svg class="absolute inset-0 w-full h-full text-outline-variant animate-[spin_40s_linear_infinite]" viewbox="0 0 200 200">
+<circle cx="100" cy="100" fill="none" r="94" stroke="currentColor" stroke-dasharray="2, 6" stroke-width="0.75"></circle>
+<circle cx="100" cy="100" fill="none" r="88" stroke="currentColor" stroke-width="0.5"></circle>
+<!-- Cardinal ticks -->
+<line stroke="currentColor" stroke-width="1.5" x1="100" x2="100" y1="2" y2="8"></line>
+<line stroke="currentColor" stroke-width="1.5" x1="100" x2="100" y1="192" y2="198"></line>
+<line stroke="currentColor" stroke-width="1.5" x1="2" x2="8" y1="100" y2="100"></line>
+<line stroke="currentColor" stroke-width="1.5" x1="192" x2="198" y1="100" y2="100"></line>
+</svg>
+<!-- Middle Segmented Rotating Armor Ring -->
+<svg class="absolute inset-2 w-[calc(100%-16px)] h-[calc(100%-16px)] text-primary-container animate-[spin_20s_linear_infinite_reverse]" viewbox="0 0 200 200">
+<circle cx="100" cy="100" fill="none" opacity="0.85" r="76" stroke="currentColor" stroke-dasharray="28, 12, 40, 10, 15, 8" stroke-width="2.5"></circle>
+<circle cx="100" cy="100" fill="none" opacity="0.4" r="68" stroke="currentColor" stroke-dasharray="4, 4" stroke-width="1"></circle>
+</svg>
+<!-- Inner Secondary Reticle -->
+<svg class="absolute inset-6 w-[calc(100%-48px)] h-[calc(100%-48px)] text-secondary-fixed-dim animate-[spin_12s_linear_infinite]" viewbox="0 0 200 200">
+<circle cx="100" cy="100" fill="none" opacity="0.7" r="62" stroke="currentColor" stroke-dasharray="50, 20" stroke-width="1.5"></circle>
+<line opacity="0.25" stroke="currentColor" stroke-dasharray="4, 4" stroke-width="0.5" x1="10" x2="190" y1="100" y2="100"></line>
+<line opacity="0.25" stroke="currentColor" stroke-dasharray="4, 4" stroke-width="0.5" x1="100" x2="100" y1="10" y2="190"></line>
+</svg>
+<!-- Core Tri-Segment Arc Reactor Element -->
+<svg class="absolute w-28 h-28 text-primary shadow-2xl" viewbox="0 0 100 100">
+<!-- Triangular Core Housing -->
+<polygon fill="rgba(0, 229, 255, 0.08)" points="50,16 80,72 20,72" stroke="currentColor" stroke-linejoin="round" stroke-width="1.5"></polygon>
+<circle cx="50" cy="50" fill="none" r="22" stroke="currentColor" stroke-width="1.5"></circle>
+<circle class="animate-pulse" cx="50" cy="50" fill="rgba(0, 229, 255, 0.25)" r="14" stroke="#c3f5ff" stroke-width="2"></circle>
+<!-- Crosshairs -->
+<line stroke="#c3f5ff" stroke-width="1" x1="50" x2="50" y1="36" y2="64"></line>
+<line stroke="#c3f5ff" stroke-width="1" x1="36" x2="64" y1="50" y2="50"></line>
+</svg>
+<!-- Center Emitting Orb -->
+<div class="w-5 h-5 rounded-full bg-primary-fixed shadow-[0_0_24px_#00e5ff] animate-ping opacity-60"></div>
+<div class="absolute w-3 h-3 rounded-full bg-secondary-fixed shadow-[0_0_12px_#58ffa5]"></div>
+</div>
+<!-- Hearing State Pill Directly Below Reactor -->
+<div class="mt-space-md flex items-center gap-space-sm px-space-md py-1.5 rounded-full bg-surface-container-high/90 shadow-[0_0_12px_rgba(0,229,255,0.2)]">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-telemetry-sm text-telemetry-sm text-primary tracking-wide">
+            HEARING: <span class="text-on-surface font-normal">"Hey Jarvis, check my system diagnostics..."</span>
+</span>
+</div>
+</div>
+<!-- Live Audio Waveform & Spectral Analyzer Card -->
+<div class="bg-surface-container-low/80 backdrop-blur-md p-space-md rounded-lg shadow-xl flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[16px]">graphic_eq</span>
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">// REAL-TIME AUDIO FREQUENCY</span>
+</div>
+<div class="flex items-center gap-space-md font-telemetry-sm text-telemetry-sm">
+<span class="text-secondary-fixed-dim">RMS: -14.2 dB</span>
+<span class="text-outline">NOISE: -64 dB</span>
+</div>
+</div>
+<!-- Dynamic Multi-Band Audio Visualizer Bars -->
+<div class="h-20 w-full bg-surface-container rounded flex items-end justify-between px-space-md py-2 gap-1 overflow-hidden" id="audio-visualizer-container">
+<div class="w-1.5 rounded-t bg-primary-container h-[24%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[38%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[64%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-secondary-fixed-dim h-[82%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[55%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[42%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[78%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-secondary-fixed-dim h-[95%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[70%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[45%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[32%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[58%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-secondary-fixed-dim h-[86%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[60%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[48%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[75%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[92%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[68%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[34%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[22%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[52%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-secondary-fixed-dim h-[80%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[41%] transition-all duration-150"></div>
+<div class="w-1.5 rounded-t bg-primary-container h-[18%] transition-all duration-150"></div>
+</div>
+<!-- Frequency Axis -->
+<div class="flex items-center justify-between text-outline font-telemetry-sm text-[9px] px-1">
+<span>32Hz</span>
+<span>125Hz</span>
+<span>500Hz</span>
+<span>2kHz</span>
+<span>8kHz</span>
+<span>16kHz</span>
+</div>
+</div>
+</div>
+<!-- ================= ZONE 3: RIGHT CONVERSATION & EXECUTION FEED (Col 9-12) ================= -->
+<div class="col-span-12 lg:col-span-4 flex flex-col gap-space-sm">
+<div class="bg-surface-container-low/80 backdrop-blur-md p-space-md rounded-lg shadow-xl flex-1 flex flex-col justify-between">
+<div>
+<!-- Header Bar -->
+<div class="flex items-center justify-between pb-space-xs border-b border-surface-container-highest">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">// TACTICAL TRANSCRIPT FEED</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
+<span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">SYNCHRONIZED</span>
+</div>
+</div>
+<!-- Transcript Streams -->
+<div class="space-y-space-md mt-space-md">
+<!-- Operator Bubble -->
+<div class="bg-surface-container-high/90 p-space-sm rounded-lg shadow-sm">
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase font-bold">OPERATOR // T. STARK</span>
+<span class="font-telemetry-sm text-telemetry-sm text-outline">14:42:08.112</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-snug">
+                "Hey Jarvis, check my system diagnostics and clear temporary cache if needed."
+              </p>
+</div>
+<!-- Subroutine Tool Call Execution Card -->
+<div class="bg-surface-container-highest/70 p-space-sm rounded-lg shadow-inner">
+<div class="flex items-center justify-between pb-space-xs">
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim font-bold tracking-wider">
+                  [TOOL CALL: get_system_diagnostics]
+                </span>
+<span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim bg-secondary-container/10 px-1 py-0.5 rounded">
+                  EXEC_STATUS: 200 OK
+                </span>
+</div>
+<!-- JSON Payload Readout -->
+<div class="bg-surface-container-lowest/90 p-space-xs rounded font-telemetry-sm text-telemetry-sm text-primary tracking-tight overflow-x-auto mt-space-xs">
+<span class="text-outline">{</span><br/>
+                  <span class="text-on-surface-variant">"cpu_pct":</span> <span class="text-tertiary-fixed-dim">53.4</span>,<br/>
+                  <span class="text-on-surface-variant">"mem_pressure":</span> <span class="text-tertiary-fixed-dim">"HIGH"</span>,<br/>
+                  <span class="text-on-surface-variant">"nvme_free_gb":</span> <span class="text-error">2.7</span>,<br/>
+                  <span class="text-on-surface-variant">"thermal_c":</span> <span class="text-secondary-fixed-dim">"48.2°C"</span><br/>
+<span class="text-outline">}</span>
+</div>
+<div class="flex items-center justify-between text-outline font-label-caps text-label-caps mt-space-xs">
+<span>LATENCY: 42ms</span>
+<span>SUBROUTINE: DIAG_CORE_V7</span>
+</div>
+</div>
+<!-- J.A.R.V.I.S. Response Bubble -->
+<div class="bg-surface-container/90 p-space-sm rounded-lg shadow-md">
+<div class="flex items-center justify-between mb-1">
+<div class="flex items-center gap-space-xs">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+<span class="font-label-caps text-label-caps text-primary tracking-wider uppercase font-bold">J.A.R.V.I.S. // MARK VII</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-outline">14:42:08.354</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface leading-relaxed">
+                "Sir, CPU utilisation is at fifty-three percent across twelve cores. All systems nominal, though storage is running tight at two point seven gigabytes remaining on drive C."
+              </p>
+<!-- Audio Synthesis Playback Status -->
+<div class="mt-space-sm pt-space-xs flex items-center justify-between border-t border-surface-container-highest">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary-fixed-dim text-[14px]">volume_up</span>
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase">SYNTH PLAYBACK NOMINAL</span>
+</div>
+<div class="flex items-center gap-0.5">
+<div class="w-1 h-2 bg-secondary-fixed-dim rounded-xs animate-pulse"></div>
+<div class="w-1 h-3 bg-secondary-fixed-dim rounded-xs animate-pulse"></div>
+<div class="w-1 h-2 bg-secondary-fixed-dim rounded-xs animate-pulse"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Terminal Status Footer -->
+<div class="pt-space-md">
+<div class="p-space-xs bg-surface-container-highest/30 rounded flex items-center justify-between font-label-caps text-label-caps text-outline">
+<span>THREAD://STARK.AI.CHAT_09</span>
+<span>END-OF-STREAM // READY</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- ================= ZONE 4: BOTTOM COMMAND DOCK (Full Width) ================= -->
+<div class="mt-space-sm w-full bg-surface-container-low/95 backdrop-blur-xl p-space-md rounded-lg shadow-2xl flex flex-col gap-space-sm">
+<!-- Persistent Command Prompt Input Bar -->
+<div class="flex items-center gap-space-sm bg-surface-container-lowest p-space-xs rounded-lg shadow-inner focus-within:shadow-[0_0_12px_rgba(0,229,255,0.35)] transition-all">
+<span class="font-label-caps text-label-caps text-primary px-space-sm uppercase select-none tracking-widest">[PROMPT &gt;_]</span>
+<input class="flex-1 bg-transparent border-none outline-none font-telemetry-md text-telemetry-md text-on-surface placeholder:text-outline" id="tactical-input" placeholder="Ask or type command... (e.g. 'Purge local cache', 'Reroute auxiliary power')" type="text"/>
+<div class="flex items-center gap-space-xs">
+<button class="w-8 h-8 rounded bg-surface-container hover:bg-surface-container-high flex items-center justify-center text-primary-container transition-colors" title="Voice Input Pulse">
+<span class="material-symbols-outlined text-[18px]">mic</span>
+</button>
+<button class="px-space-md py-1 bg-primary text-on-primary font-headline-sm text-headline-sm uppercase rounded transition-all hover:bg-secondary-container hover:text-on-secondary-container">
+          EXECUTE
+        </button>
+</div>
+</div>
+<!-- Quick Action Chips & Diagnostics Ribbon -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<!-- Quick Action Buttons -->
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider mr-1">QUICK TRIGGER:</span>
+<button class="px-space-sm py-1 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry-sm text-telemetry-sm uppercase rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">monitor_heart</span>
+          Diagnostics
+        </button>
+<button class="px-space-sm py-1 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry-sm text-telemetry-sm uppercase rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">volume_down</span>
+          Volume 50%
+        </button>
+<button class="px-space-sm py-1 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry-sm text-telemetry-sm uppercase rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">screenshot_monitor</span>
+          Take Screenshot
+        </button>
+<button class="px-space-sm py-1 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry-sm text-telemetry-sm uppercase rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">mic_off</span>
+          Mute Mic
+        </button>
+<button class="px-space-sm py-1 bg-error-container/20 hover:bg-error-container/40 text-error font-telemetry-sm text-telemetry-sm uppercase rounded transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px]">delete_sweep</span>
+          Purge Cache
+        </button>
+</div>
+<!-- Telemetry Pipeline Metadata -->
+<div class="flex items-center gap-space-md font-telemetry-sm text-telemetry-sm text-outline">
+<div>TTFA: <span class="text-secondary-fixed-dim">240ms</span></div>
+<span>|</span>
+<div>ENGINE: <span class="text-primary">Groq Llama 3.3</span></div>
+<span>|</span>
+<div>VOICE: <span class="text-on-surface font-semibold">Personal Cloned (MK VII)</span></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Client-side Interactive Script -->
+<script>
+  // Dynamic audio bar height simulation for alive HUD feel
+  const audioContainer = document.getElementById('audio-visualizer-container');
+  if (audioContainer) {
+    const bars = audioContainer.children;
+    setInterval(() => {
+      for (let i = 0; i < bars.length; i++) {
+        // Vary randomly within plausible speech dynamics
+        const height = Math.floor(Math.random() * 85) + 15;
+        bars[i].style.height = `${height}%`;
+      }
+    }, 180);
+  }
+
+  // Voice Mode Button Toggle
+  const toggleBtn = document.getElementById('toggle-voice-btn');
+  if (toggleBtn) {
+    let engaged = true;
+    toggleBtn.addEventListener('click', () => {
+      engaged = !engaged;
+      if (engaged) {
+        toggleBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">bolt</span><span>VOICE MODE: ENGAGED</span>';
+        toggleBtn.className = "mt-space-sm w-full py-2 px-space-md bg-primary-container text-on-primary-container font-headline-sm text-headline-sm uppercase tracking-widest flex items-center justify-center gap-space-sm rounded transition-all duration-200 hover:brightness-110 active:scale-[0.99] shadow-[0_0_16px_rgba(0,229,255,0.4)]";
+      } else {
+        toggleBtn.innerHTML = '<span class="material-symbols-outlined text-[16px]">power_settings_new</span><span>VOICE MODE: STANDBY</span>';
+        toggleBtn.className = "mt-space-sm w-full py-2 px-space-md bg-surface-container-highest text-on-surface-variant font-headline-sm text-headline-sm uppercase tracking-widest flex items-center justify-center gap-space-sm rounded transition-all duration-200 hover:brightness-110 active:scale-[0.99]";
+      }
+    });
+  }
+
+  // Prompt Enter Key Listener
+  const inputPrompt = document.getElementById('tactical-input');
+  if (inputPrompt) {
+    inputPrompt.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && inputPrompt.value.trim().length > 0) {
+        inputPrompt.value = '';
+      }
+    });
+  }
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-7 bg-surface-container-lowest/95 backdrop-blur-md z-40 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">CORE:</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">NOMINAL</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">/</span><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">MEM:</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface">14.2 GB / 64 GB</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">/</span><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">FPS:</span><span class="font-telemetry-sm text-telemetry-sm text-primary">144.0</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-outline">graphic_eq</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">AUDIO REACTOR: SYNCED</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">ALL CHANNELS SECURE</span></div></div></footer></body></html>

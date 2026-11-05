@@ -1,0 +1,354 @@
+<!DOCTYPE html><html class="dark" lang="en"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0" name="viewport"><meta content="web_dashboard" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.tactical-grid-bg{background-image:linear-gradient(to right,rgba(59,73,76,0.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(59,73,76,0.08) 1px,transparent 1px);background-size:24px 24px;}.scanline-overlay{background:linear-gradient(rgba(10,14,20,0) 50%,rgba(0,0,0,0.25) 50%);background-size:100% 3px;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed-dim": "#ffba27", "on-surface": "#dfe2eb", "surface-container-highest": "#31353c", "surface-tint": "#00daf3", "on-error-container": "#ffdad6", "on-error": "#690005", "on-primary": "#00363d", "surface-container-lowest": "#0a0e14", "on-background": "#dfe2eb", "surface-container": "#1c2026", "tertiary": "#ffeacc", "surface-variant": "#31353c", "surface": "#10141a", "tertiary-container": "#ffc863", "error-container": "#93000a", "surface-container-low": "#181c22", "primary-fixed": "#9cf0ff", "on-secondary-fixed": "#00210f", "on-secondary-fixed-variant": "#00522e", "on-primary-fixed": "#001f24", "inverse-surface": "#dfe2eb", "on-tertiary-container": "#765300", "secondary": "#f5fff4", "secondary-fixed-dim": "#00e388", "inverse-on-surface": "#2d3137", "on-secondary-container": "#007241", "inverse-primary": "#006875", "surface-dim": "#10141a", "background": "#10141a", "secondary-container": "#1fff9b", "on-surface-variant": "#bac9cc", "primary-fixed-dim": "#00daf3", "tertiary-fixed": "#ffdea9", "error": "#ffb4ab", "on-tertiary": "#422c00", "on-secondary": "#00391e", "outline-variant": "#3b494c", "outline": "#849396", "secondary-fixed": "#58ffa5", "on-tertiary-fixed-variant": "#5e4100", "primary": "#c3f5ff", "surface-container-high": "#262a31", "surface-bright": "#353940", "primary-container": "#00e5ff", "on-primary-container": "#00626e", "on-primary-fixed-variant": "#004f58", "on-tertiary-fixed": "#271900" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-md": "0.75rem", "space-lg": "1rem", "gutter": "0.75rem", "space-xs": "0.25rem", "margin": "1rem", "space-xl": "1.5rem", "space-sm": "0.375rem" }, "fontFamily": { "headline-md": [ "Geist" ], "headline-lg": [ "Geist" ], "label-caps": [ "JetBrains Mono" ], "body-lg": [ "Geist" ], "body-md": [ "Geist" ], "body-sm": [ "Geist" ], "headline-sm": [ "Geist" ], "telemetry-sm": [ "JetBrains Mono" ], "telemetry-md": [ "JetBrains Mono" ], "headline-xl": [ "Geist" ], "telemetry-lg": [ "JetBrains Mono" ] }, "fontSize": { "headline-md": [ "16px", { "lineHeight": "22px", "letterSpacing": "0.05em", "fontWeight": "600" } ], "headline-lg": [ "20px", { "lineHeight": "26px", "letterSpacing": "0.06em", "fontWeight": "700" } ], "label-caps": [ "9px", { "lineHeight": "12px", "letterSpacing": "0.12em", "fontWeight": "700" } ], "body-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-md": [ "12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-sm": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-sm": [ "13px", { "lineHeight": "18px", "letterSpacing": "0.05em", "fontWeight": "600" } ], "telemetry-sm": [ "10px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "500" } ], "telemetry-md": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "500" } ], "headline-xl": [ "28px", { "lineHeight": "34px", "letterSpacing": "0.08em", "fontWeight": "700" } ], "telemetry-lg": [ "18px", { "lineHeight": "22px", "letterSpacing": "0.02em", "fontWeight": "600" } ] } } } };</script></head><body class="bg-surface-container-lowest font-body-md text-body-md text-on-surface antialiased select-none"><div class="fixed inset-0 pointer-events-none tactical-grid-bg opacity-40 z-0"></div><div class="fixed inset-0 pointer-events-none scanline-overlay opacity-30 z-50"></div><header class="fixed top-0 left-0 right-0 z-40 bg-surface-container-low/95 backdrop-blur-md"><div class="h-10 w-full px-space-md flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-space-xs text-primary"><span class="material-symbols-outlined text-[16px]">token</span><span class="font-label-caps text-label-caps uppercase tracking-wider text-primary">STARK IND</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">|</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant font-medium tracking-tight">J.A.R.V.I.S. // MARK VII - Tactical Environment [W-11]</span><div class="flex items-center gap-space-xs ml-space-sm px-space-xs py-0.5 rounded bg-surface-container-highest"><span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse"></span><span class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase">SYS:ONLINE</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">wifi_tethering</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">12ms</span></div><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">schedule</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">14:28:09 ZULU</span></div><div class="flex items-center gap-space-xs text-outline"><span class="material-symbols-outlined text-[14px]">mic</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">ARRAY_01 ACTIVE</span></div></div><nav class="hidden xl:flex items-center gap-space-xs px-space-sm py-1 bg-surface-container rounded" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="tactical-cockpit" href="#">Cockpit</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="telemetry-diagnostics" href="#">Telemetry</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="execution-subroutines" href="#">Execution</a><a class="px-space-sm py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-colors font-telemetry-sm text-telemetry-sm uppercase" data-path="neural-architecture" href="#">Neural Core</a></nav><div class="flex items-center gap-space-xs"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="flex items-center ml-space-sm bg-surface-container-highest rounded overflow-hidden"><button aria-label="Minimize" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[14px]">minimize</span></button><button aria-label="Maximize" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[13px]">check_box_outline_blank</span></button><button aria-label="Close" class="h-7 w-8 flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors" type="button"><span class="material-symbols-outlined text-[14px]">close</span></button></div></div></div></div></header><aside class="fixed left-0 top-10 bottom-7 w-64 bg-surface-container-low/80 backdrop-blur-xl z-30 flex flex-col justify-between"><div class="p-space-md"><div class="flex items-center justify-between pb-space-sm"><span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">// SYSTEM FLANK</span><span class="font-telemetry-sm text-telemetry-sm text-primary">NODE:MK7</span></div><div class="p-space-sm bg-surface-container rounded mb-space-md"><div class="flex items-center justify-between mb-space-xs"><span class="font-label-caps text-label-caps text-on-surface-variant">NEURAL LOAD</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">38.4%</span></div><div class="w-full h-1 bg-surface-container-highest rounded-full overflow-hidden"><div class="h-full bg-secondary-fixed-dim w-[38%]"></div></div></div><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="tactical-cockpit" href="#"><span class="material-symbols-outlined text-[18px]">radar</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Cockpit HUD</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="telemetry-diagnostics" href="#"><span class="material-symbols-outlined text-[18px]">insights</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Telemetry</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="execution-subroutines" href="#"><span class="material-symbols-outlined text-[18px]">terminal</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Execution Bay</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="neural-architecture" href="#"><span class="material-symbols-outlined text-[18px]">neurology</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Neural Mesh</span></a><a class="flex items-center gap-space-sm px-space-sm py-2 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="sensor-matrix" href="#"><span class="material-symbols-outlined text-[18px]">sensors</span><span class="font-headline-sm text-headline-sm uppercase tracking-wide">Sensors</span></a></nav></div><div class="p-space-md bg-surface-container-lowest/50"><div class="flex items-center justify-between text-outline mb-space-xs"><span class="font-label-caps text-label-caps uppercase">STARK CLOUD SYNC</span><span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span></div><div class="font-telemetry-sm text-telemetry-sm text-on-surface-variant truncate">NODE://STARK.INTERNAL.07</div></div></aside><div class="pl-64"><main class="relative pt-10 pb-7 min-h-screen w-full px-space-md z-10"><div class="flex flex-col w-full relative min-h-[calc(100vh-4.25rem)]">
+<!-- BACKGROUND HUD COCKPIT SIMULATION LAYER -->
+<div aria-hidden="true" class="grid grid-cols-12 gap-space-md opacity-25 filter blur-[3px] pointer-events-none select-none w-full">
+<div class="col-span-3 space-y-space-md">
+<div class="bg-surface-container-low p-space-md rounded border border-outline-variant/30 space-y-space-sm">
+<div class="flex justify-between items-center text-outline">
+<span class="font-label-caps text-label-caps tracking-widest">// NEURAL_SYNC_ARRAY</span>
+<span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">99.8%</span>
+</div>
+<div class="h-24 bg-surface-container rounded flex items-end gap-1 p-2">
+<div class="w-1.5 h-12 bg-primary"></div>
+<div class="w-1.5 h-16 bg-primary"></div>
+<div class="w-1.5 h-8 bg-primary-fixed-dim"></div>
+<div class="w-1.5 h-20 bg-secondary-fixed-dim"></div>
+<div class="w-1.5 h-14 bg-primary"></div>
+<div class="w-1.5 h-6 bg-primary"></div>
+<div class="w-1.5 h-18 bg-secondary-fixed-dim"></div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-md rounded border border-outline-variant/30 space-y-space-xs font-telemetry-sm text-telemetry-sm text-on-surface-variant">
+<div class="">CORE_TEMP: 312.4K</div>
+<div class="">VECTOR_LATENCY: 0.04ms</div>
+<div class="">MEM_BANDWIDTH: 1048 GB/S</div>
+</div>
+</div>
+<div class="col-span-6 bg-surface-container-low p-space-lg rounded border border-outline-variant/30 flex flex-col items-center justify-center min-h-[420px]">
+<div class="w-48 h-48 rounded-full border border-primary/20 flex items-center justify-center relative">
+<div class="w-36 h-36 rounded-full border border-dashed border-primary/40 animate-spin"></div>
+<div class="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center text-primary font-telemetry-md text-telemetry-md">ARC_CORE</div>
+</div>
+</div>
+<div class="col-span-3 space-y-space-md">
+<div class="bg-surface-container-low p-space-md rounded border border-outline-variant/30 space-y-space-xs font-telemetry-sm text-telemetry-sm text-on-surface-variant">
+<div class="text-primary font-headline-sm text-headline-sm uppercase">// EXECUTION_QUEUE</div>
+<div class="">&gt; ROUTE_INIT: SECURE</div>
+<div class="">&gt; SPECTRAL_PASS: NOMINAL</div>
+<div class="">&gt; VOX_SYNTH: STANDBY</div>
+</div>
+</div>
+</div>
+<!-- MODAL BACKDROP OVERLAY -->
+<div class="absolute inset-0 z-30 flex items-start justify-center py-space-md px-space-xs overflow-y-auto backdrop-blur-md bg-surface-container-lowest/85" id="modal-container" style="background-color: rgba(2, 6, 23, 0.88);">
+<!-- MODAL DIALOG CARD -->
+<div class="relative w-full max-w-[700px] bg-[#0c121d] rounded-xl border border-outline-variant/50 shadow-[0_0_50px_rgba(0,229,255,0.14)] overflow-hidden my-auto" style="width: 680px; max-width: 680px; height: 720px; max-height: 720px; background-color: rgb(15, 23, 42); border: 1px solid rgb(30, 41, 59); box-shadow: rgba(0, 229, 255, 0.25) 0px 0px 35px -5px, rgba(0, 0, 0, 0.9) 0px 25px 50px -12px; display: flex; flex-direction: column;">
+<!-- Top Subtle Tactical Glow Strip -->
+<div class="h-[2px] w-full bg-gradient-to-r from-transparent via-primary-container to-transparent" style="background: linear-gradient(90deg, transparent, rgb(0, 229, 255), transparent);"></div>
+<!-- MODAL HEADER -->
+<div class="px-space-xl py-space-lg bg-surface-container-low/90 flex items-start justify-between border-b border-outline-variant/30">
+<div class="space-y-0.5">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-[20px] text-primary-container animate-pulse">terminal</span>
+<h2 class="font-headline-md text-headline-md tracking-wider text-on-surface uppercase">
+              // CONFIGURATION // J.A.R.V.I.S. SYSTEM &amp; VOICE STUDIO
+            </h2>
+</div>
+<div class="flex items-center gap-space-xs font-label-caps text-label-caps text-on-surface-variant pl-7">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></span>
+<span class="">MARK VII NEURAL SUITE // CORE RECONFIGURATION NODE</span>
+</div>
+</div>
+<button aria-label="Close dialog" class="text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1 px-space-xs py-0.5 rounded border border-outline-variant/30 hover:border-primary/50 bg-surface-container" id="close-modal-btn" type="button">
+<span class="font-telemetry-sm text-telemetry-sm uppercase">ESC</span>
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+<!-- MODAL BODY -->
+<div class="p-space-xl space-y-space-xl max-h-[calc(88vh-8rem)] overflow-y-auto" style="flex: 1 1 0%; min-height: 0px; overflow-y: auto;">
+<!-- ========================================== -->
+<!-- SECTION 1: COGNITIVE BRAIN PROVIDERS       -->
+<!-- ========================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-caps text-label-caps text-primary-container uppercase tracking-wider">[SUBSYSTEM 01]</span>
+<span class="font-headline-sm text-headline-sm uppercase text-on-surface tracking-wide">Cognitive Brain Providers &amp; API Keys</span>
+</div>
+<span class="font-telemetry-sm text-telemetry-sm text-outline">STARK_CREDENTIAL_RING</span>
+</div>
+<!-- API Input Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Groq API Key -->
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<label class="font-label-caps text-label-caps uppercase text-on-surface-variant" for="groq-key-input">Groq API Key</label>
+<div class="flex items-center gap-1 font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-ping"></span>
+<span class="">CONNECTED</span>
+</div>
+</div>
+<div class="relative flex items-center bg-[#131b28] rounded border border-outline-variant/60 focus-within:border-primary-container focus-within:shadow-[0_0_10px_rgba(0,229,255,0.25)] transition-all">
+<input class="w-full bg-transparent px-space-sm py-2 font-telemetry-sm text-telemetry-sm text-primary tracking-wider focus:outline-none" id="groq-key-input" readonly="" type="password" value="gsk_••••••••••••">
+<button aria-label="Toggle Groq Key Visibility" class="px-space-sm text-on-surface-variant hover:text-primary transition-colors" onclick="toggleSecretVisibility('groq-key-input', this)" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</div>
+</div>
+<!-- Gemini API Key -->
+<div class="space-y-1">
+<div class="flex items-center justify-between">
+<label class="font-label-caps text-label-caps uppercase text-on-surface-variant" for="gemini-key-input">Gemini API Key</label>
+<div class="flex items-center gap-1 font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim"></span>
+<span class="">CONNECTED</span>
+</div>
+</div>
+<div class="relative flex items-center bg-[#131b28] rounded border border-outline-variant/60 focus-within:border-primary-container focus-within:shadow-[0_0_10px_rgba(0,229,255,0.25)] transition-all">
+<input class="w-full bg-transparent px-space-sm py-2 font-telemetry-sm text-telemetry-sm text-primary tracking-wider focus:outline-none" id="gemini-key-input" readonly="" type="password" value="AQ.Ab••••••••••••">
+<button aria-label="Toggle Gemini Key Visibility" class="px-space-sm text-on-surface-variant hover:text-primary transition-colors" onclick="toggleSecretVisibility('gemini-key-input', this)" type="button">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Provider Card Selector: ACTIVE BRAIN ENGINE -->
+<div class="space-y-space-xs pt-space-xs">
+<div class="flex items-center justify-between"><span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">// ACTIVE BRAIN ENGINE</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant">SWITCH_LATENCY: &lt;50ms</span></div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md" id="brain-engine-group" role="radiogroup">
+<!-- Card 1: Groq [Selected / Active] -->
+<div aria-checked="true" class="cursor-pointer rounded border border-primary-container bg-surface-container/90 p-space-md shadow-[0_0_14px_rgba(0,229,255,0.18)] transition-all hover:bg-surface-container-high" id="engine-card-groq" onclick="selectEngine('groq')" role="radio" tabindex="0"><div class="flex items-start justify-between"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#00e5ff]"></span><span class="font-headline-sm text-headline-sm uppercase text-on-surface">Groq Ultra-Fast</span></div><span class="engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container border border-primary-container/40">SELECTED // ACTIVE</span></div><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-sm">Llama 3.3 70B - 120ms TTFT · High-Speed Command Parsing</p><div class="mt-space-sm flex items-center gap-space-md font-telemetry-sm text-telemetry-sm text-primary"><span class="">LATENCY: 120MS</span><span class="">BURST: 380 TOK/S</span></div></div>
+<!-- Card 2: Gemini [Standby] -->
+<div aria-checked="false" class="cursor-pointer rounded border border-outline-variant/40 bg-surface-container-low/60 p-space-md transition-all hover:border-outline-variant hover:bg-surface-container" id="engine-card-gemini" onclick="selectEngine('gemini')" role="radio" tabindex="0"><div class="flex items-start justify-between"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-outline"></span><span class="font-headline-sm text-headline-sm uppercase text-on-surface">Google Gemini</span></div><span class="engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-surface-container-highest text-outline border border-outline-variant/30">STANDBY</span></div><p class="font-body-sm text-body-sm text-on-surface-variant mt-space-sm">Gemini 2.0 Flash - Multimodal Vision · Audio Streaming &amp; Deep Reasoning</p><div class="mt-space-sm flex items-center gap-space-md font-telemetry-sm text-telemetry-sm text-outline"><span class="">LATENCY: 340MS</span><span class="">MULTIMODAL: ENABLED</span></div></div>
+</div>
+</div>
+</section>
+<!-- ========================================== -->
+<!-- SECTION 2: CUSTOM VOICE CLONING STUDIO     -->
+<!-- ========================================== -->
+<section class="space-y-space-md">
+<div class="flex items-center justify-between border-b border-outline-variant/20 pb-space-xs"><div class="flex items-center gap-space-xs"><span class="text-[16px]">🧬</span><span class="font-headline-sm text-headline-sm uppercase text-on-surface tracking-wide">PERSONAL VOICE CLONING (Instant Voice Cloning)</span></div><span class="font-label-caps text-label-caps px-1.5 py-0.5 rounded bg-tertiary-container/10 text-tertiary-fixed-dim border border-tertiary-container/30 uppercase">[ELEVENLABS_V3_LATENCY_ENGINE]</span></div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Upload an audio sample (.mp3 / .wav) of your natural speech to clone your voice for J.A.R.V.I.S.</p>
+<!-- Drag and Drop Box -->
+<div class="border-2 border-dashed border-primary-container/40 hover:border-primary-container bg-surface-container-lowest/70 hover:bg-surface-container-low/80 p-space-lg rounded-lg transition-all text-center flex flex-col items-center justify-center cursor-pointer group"><div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary-container mb-space-xs group-hover:scale-110 transition-transform"><span class="material-symbols-outlined text-[24px]">graphic_eq</span></div><div class="font-headline-sm text-headline-sm text-on-surface tracking-wide group-hover:text-primary transition-colors">Drop voice sample here or Browse Audio Files (Max 10MB)</div><span class="font-telemetry-sm text-telemetry-sm text-outline mt-0.5">Supports MP3, WAV, FLAC</span><div class="flex flex-wrap items-center justify-center gap-space-xs mt-space-md"><span class="font-label-caps text-label-caps px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/30">PCM WAV 44.1kHz</span><span class="font-label-caps text-label-caps px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/30">10-60 Seconds Recommended</span><span class="font-label-caps text-label-caps px-2 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/30">Low Background Noise</span></div></div>
+<!-- Uploaded Audio Card -->
+<div class="bg-surface-container-low rounded-lg p-space-md border border-outline-variant/40 space-y-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed-dim">check_circle</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">my_voice_sample.wav</span>
+<span class="font-telemetry-sm text-telemetry-sm text-outline">(1.4 MB)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-caps text-label-caps text-secondary-fixed-dim uppercase bg-secondary-fixed-dim/10 px-1.5 py-0.5 rounded">READY FOR EMBEDDING</span>
+<button aria-label="Remove audio sample" class="text-outline hover:text-error transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Waveform Scrubber Simulation -->
+<div class="bg-surface-container-lowest p-space-sm rounded border border-outline-variant/30 flex items-center gap-space-md">
+<!-- Play/Pause Toggle -->
+<button aria-label="Play/Pause Voice Sample" class="w-8 h-8 rounded bg-primary-container text-on-primary-container flex items-center justify-center hover:bg-secondary-fixed-dim transition-colors flex-shrink-0" id="playback-toggle-btn" onclick="togglePlayback()" type="button">
+<span class="material-symbols-outlined text-[18px]" id="play-icon">play_arrow</span>
+</button>
+<!-- Waveform SVG visualizer -->
+<div class="flex-1 flex items-center gap-[2px] h-8 overflow-hidden py-1">
+<div class="w-1 h-3 bg-primary-container"></div>
+<div class="w-1 h-5 bg-primary-container"></div>
+<div class="w-1 h-7 bg-primary-container"></div>
+<div class="w-1 h-4 bg-primary-container"></div>
+<div class="w-1 h-8 bg-primary-container"></div>
+<div class="w-1 h-6 bg-primary-container"></div>
+<div class="w-1 h-3 bg-primary-container"></div>
+<div class="w-1 h-7 bg-primary-container"></div>
+<div class="w-1 h-5 bg-primary-container"></div>
+<div class="w-1 h-2 bg-primary-container"></div>
+<div class="w-1 h-6 bg-primary-container"></div>
+<div class="w-1 h-8 bg-primary-container"></div>
+<div class="w-1 h-4 bg-outline-variant"></div>
+<div class="w-1 h-5 bg-outline-variant"></div>
+<div class="w-1 h-3 bg-outline-variant"></div>
+<div class="w-1 h-6 bg-outline-variant"></div>
+<div class="w-1 h-2 bg-outline-variant"></div>
+<div class="w-1 h-7 bg-outline-variant"></div>
+<div class="w-1 h-4 bg-outline-variant"></div>
+<div class="w-1 h-8 bg-outline-variant"></div>
+<div class="w-1 h-5 bg-outline-variant"></div>
+<div class="w-1 h-3 bg-outline-variant"></div>
+<div class="w-1 h-2 bg-outline-variant"></div>
+</div>
+<!-- Time and Volume -->
+<div class="flex items-center gap-space-sm flex-shrink-0">
+<span class="font-telemetry-sm text-telemetry-sm text-on-surface-variant font-medium">0:42 / 0:42</span>
+<div class="flex items-center gap-1 text-outline">
+<span class="material-symbols-outlined text-[16px]">volume_up</span>
+<div class="w-10 h-1 bg-surface-container-highest rounded overflow-hidden">
+<div class="w-4/5 h-full bg-primary"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Tactical Clone Action Button -->
+<div class="pt-space-xs">
+<button class="w-full py-2.5 px-space-lg rounded bg-secondary-fixed-dim hover:bg-secondary-fixed text-on-secondary-fixed font-headline-sm text-headline-sm uppercase tracking-wider flex items-center justify-center gap-space-sm shadow-[0_0_20px_rgba(0,227,136,0.35)] transition-all hover:scale-[1.008] active:scale-[0.99]" id="clone-voice-btn" onclick="triggerCloning()" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span class="">CLONE &amp; ACTIVATE PERSONAL VOICE</span></button>
+</div>
+<!-- Active Status Badge -->
+<div class="flex items-center justify-between p-space-xs px-space-sm rounded bg-surface-container border border-outline-variant/30 font-telemetry-sm text-telemetry-sm">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-secondary-fixed-dim animate-pulse"></span>
+<span class="text-on-surface">Active Voice: Personal Cloned Voice (ID: v_992a)</span>
+</div>
+<span class="text-primary-container font-mono">LATENCY: 180MS</span>
+</div>
+</section>
+</div>
+<!-- ========================================== -->
+<!-- SECTION 3: MODAL FOOTER                    -->
+<!-- ========================================== -->
+<div class="px-space-xl py-space-md bg-surface-container-low/95 border-t border-outline-variant/40 flex flex-col sm:flex-row items-center justify-between gap-space-md">
+<!-- Left: Diagnostic status -->
+<div class="flex items-center gap-space-xs font-telemetry-sm text-telemetry-sm text-outline">
+<span class="material-symbols-outlined text-[14px] text-primary">sync</span>
+<span class="">NODE: STARK_MK7 // CHANGES APPLY INSTANTLY TO RUNTIME</span>
+</div>
+<!-- Right: Action Buttons -->
+<div class="flex items-center gap-space-sm w-full sm:w-auto justify-end">
+<button class="px-space-lg py-2 rounded text-on-surface-variant hover:text-on-surface border border-outline-variant hover:border-outline bg-surface-container text-headline-sm font-headline-sm uppercase tracking-wide transition-all" id="cancel-btn" type="button">
+            Cancel
+          </button>
+<button class="px-space-xl py-2 rounded bg-primary-container hover:bg-primary text-on-primary-container font-headline-sm text-headline-sm uppercase tracking-wide shadow-[0_0_20px_rgba(0,229,255,0.4)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center gap-1" id="save-apply-btn" onclick="saveConfiguration()" type="button">
+<span class="material-symbols-outlined text-[16px]">save</span>
+<span class="">Save &amp; Apply Configuration</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  // Reveal/Mask Input Values
+  function toggleSecretVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (!input || !icon) return;
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+    }
+  }
+
+  // Engine Card Switching Interaction
+  function selectEngine(type) {
+    const groqCard = document.getElementById('engine-card-groq');
+    const geminiCard = document.getElementById('engine-card-gemini');
+    if (!groqCard || !geminiCard) return;
+
+    const groqBadge = groqCard.querySelector('.engine-badge');
+    const geminiBadge = geminiCard.querySelector('.engine-badge');
+    const groqDot = groqCard.querySelector('.rounded-full');
+    const geminiDot = geminiCard.querySelector('.rounded-full');
+
+    if (type === 'groq') {
+      groqCard.setAttribute('aria-checked', 'true');
+      geminiCard.setAttribute('aria-checked', 'false');
+
+      groqCard.className = 'cursor-pointer rounded border border-primary-container bg-surface-container/90 p-space-md shadow-[0_0_14px_rgba(0,229,255,0.18)] transition-all hover:bg-surface-container-high';
+      geminiCard.className = 'cursor-pointer rounded border border-outline-variant/40 bg-surface-container-low/60 p-space-md transition-all hover:border-outline-variant hover:bg-surface-container';
+
+      if (groqBadge) {
+        groqBadge.textContent = 'SELECTED // ACTIVE';
+        groqBadge.className = 'engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container border border-primary-container/40';
+      }
+      if (geminiBadge) {
+        geminiBadge.textContent = 'STANDBY';
+        geminiBadge.className = 'engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-surface-container-highest text-outline border border-outline-variant/30';
+      }
+      if (groqDot) groqDot.className = 'w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#00e5ff]';
+      if (geminiDot) geminiDot.className = 'w-2 h-2 rounded-full bg-outline';
+    } else {
+      geminiCard.setAttribute('aria-checked', 'true');
+      groqCard.setAttribute('aria-checked', 'false');
+
+      geminiCard.className = 'cursor-pointer rounded border border-primary-container bg-surface-container/90 p-space-md shadow-[0_0_14px_rgba(0,229,255,0.18)] transition-all hover:bg-surface-container-high';
+      groqCard.className = 'cursor-pointer rounded border border-outline-variant/40 bg-surface-container-low/60 p-space-md transition-all hover:border-outline-variant hover:bg-surface-container';
+
+      if (geminiBadge) {
+        geminiBadge.textContent = 'SELECTED // ACTIVE';
+        geminiBadge.className = 'engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-primary-container/20 text-primary-container border border-primary-container/40';
+      }
+      if (groqBadge) {
+        groqBadge.textContent = 'STANDBY';
+        groqBadge.className = 'engine-badge font-label-caps text-label-caps uppercase px-1.5 py-0.5 rounded bg-surface-container-highest text-outline border border-outline-variant/30';
+      }
+      if (geminiDot) geminiDot.className = 'w-2 h-2 rounded-full bg-primary-container shadow-[0_0_6px_#00e5ff]';
+      if (groqDot) groqDot.className = 'w-2 h-2 rounded-full bg-outline';
+    }
+  }
+
+  // Simple Audio Playback Toggle Simulation
+  let isPlaying = false;
+  function togglePlayback() {
+    isPlaying = !isPlaying;
+    const icon = document.getElementById('play-icon');
+    if (icon) {
+      icon.textContent = isPlaying ? 'pause' : 'play_arrow';
+    }
+  }
+
+  // Voice Cloning Action Micro-feedback
+  function triggerCloning() {
+    const btn = document.getElementById('clone-voice-btn');
+    if (!btn) return;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[18px] animate-spin">refresh</span><span>SYNTHESIZING ACOUSTIC WEIGHTS...</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[18px]">verified</span><span>VOICE CLONED SUCCESSFULLY</span>';
+      setTimeout(() => {
+        btn.innerHTML = originalText;
+      }, 2000);
+    }, 1200);
+  }
+
+  // Save Configuration Simulation
+  function saveConfiguration() {
+    const btn = document.getElementById('save-apply-btn');
+    if (!btn) return;
+    const original = btn.innerHTML;
+    btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">sync</span><span>APPLYING TO KERNEL...</span>';
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">done</span><span>SAVED TO RUNTIME</span>';
+      setTimeout(() => {
+        btn.innerHTML = original;
+      }, 1500);
+    }, 900);
+  }
+
+  // Close Modal interactions
+  const closeBtn = document.getElementById('close-modal-btn');
+  const cancelBtn = document.getElementById('cancel-btn');
+  const modalContainer = document.getElementById('modal-container');
+
+  function handleClose() {
+    if (modalContainer) {
+      modalContainer.classList.add('opacity-0', 'pointer-events-none', 'transition-opacity', 'duration-300');
+    }
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', handleClose);
+  if (cancelBtn) cancelBtn.addEventListener('click', handleClose);
+
+  // Keyboard shortcut ESC support
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      handleClose();
+    }
+  });
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-7 bg-surface-container-lowest/95 backdrop-blur-md z-40 px-space-md flex items-center justify-between"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">CORE:</span><span class="font-telemetry-sm text-telemetry-sm text-secondary-fixed-dim">NOMINAL</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">/</span><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">MEM:</span><span class="font-telemetry-sm text-telemetry-sm text-on-surface">14.2 GB / 64 GB</span></div><span class="font-telemetry-sm text-telemetry-sm text-outline-variant">/</span><div class="flex items-center gap-space-xs"><span class="font-label-caps text-label-caps text-outline uppercase">FPS:</span><span class="font-telemetry-sm text-telemetry-sm text-primary">144.0</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-[14px] text-outline">graphic_eq</span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">AUDIO REACTOR: SYNCED</span></div><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-secondary-fixed-dim"></span><span class="font-label-caps text-label-caps text-on-surface-variant uppercase">ALL CHANNELS SECURE</span></div></div></footer>
+
+</body></html>

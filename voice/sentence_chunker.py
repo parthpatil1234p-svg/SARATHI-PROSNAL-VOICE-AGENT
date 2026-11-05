@@ -21,10 +21,25 @@ class SentenceChunker:
         self, token_generator: AsyncGenerator[str, None]
     ) -> AsyncGenerator[str, None]:
         """Reads tokens from an async generator and yields ready-to-speak sentences."""
+        is_first_chunk = True
+
         async for token in token_generator:
             self.buffer += token
 
-            # Check if we have at least min_chunk_chars before attempting to split
+            # For the very first clause, split eagerly on commas/dashes for sub-200ms TTFA
+            if is_first_chunk and len(self.buffer) >= 8:
+                first_match = re.search(r'([,;:\n.?!]+(?:\s+|$))', self.buffer)
+                if first_match:
+                    end_idx = first_match.end()
+                    sentence = self.buffer[:end_idx].strip()
+                    self.buffer = self.buffer[end_idx:]
+                    is_first_chunk = False
+                    cleaned = self._clean_for_speech(sentence)
+                    if cleaned:
+                        yield cleaned
+                    continue
+
+            # Check standard minimum length before splitting
             if len(self.buffer) < self.min_chunk_chars:
                 continue
 
@@ -33,6 +48,7 @@ class SentenceChunker:
                 end_idx = match.end()
                 sentence = self.buffer[:end_idx].strip()
                 self.buffer = self.buffer[end_idx:]
+                is_first_chunk = False
 
                 # Clean markdown formatting artifacts from text before TTS
                 cleaned = self._clean_for_speech(sentence)

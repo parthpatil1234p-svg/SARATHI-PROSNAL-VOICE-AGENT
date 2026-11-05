@@ -418,6 +418,23 @@ class JarvisDesktopApp(ctk.CTk):
         opt_provider.set("Gemini" if settings.DEFAULT_LLM_PROVIDER == "gemini" else "Groq")
         opt_provider.pack(anchor="w", padx=25, pady=(2, 10))
 
+        # Voice Engine / Latency Mode Selector
+        ctk.CTkLabel(modal, text="TTS Voice Engine (Latency vs Quality):", font=ctk.CTkFont(size=12)).pack(anchor="w", padx=25)
+        opt_tts = ctk.CTkOptionMenu(
+            modal,
+            values=["Edge-TTS British (Natural)", "Ultra-Fast Local SAPI (<150ms)", "ElevenLabs Custom Voice"],
+            fg_color=COLOR_CYAN_DIM,
+            button_color=COLOR_CYAN,
+            width=320
+        )
+        if settings.TTS_PROVIDER in ("sapi", "local", "fast"):
+            opt_tts.set("Ultra-Fast Local SAPI (<150ms)")
+        elif settings.TTS_PROVIDER == "elevenlabs":
+            opt_tts.set("ElevenLabs Custom Voice")
+        else:
+            opt_tts.set("Edge-TTS British (Natural)")
+        opt_tts.pack(anchor="w", padx=25, pady=(2, 10))
+
         # Audio Output Device Selector & Test
         import sounddevice as sd
         output_devices = ["Default"]
@@ -550,19 +567,31 @@ class JarvisDesktopApp(ctk.CTk):
             chosen_dev = opt_device.get()
             new_dev_idx = device_map.get(chosen_dev, "")
 
+            tts_choice = opt_tts.get()
+            if "SAPI" in tts_choice:
+                new_tts = "sapi"
+            elif "ElevenLabs" in tts_choice:
+                new_tts = "elevenlabs"
+            else:
+                new_tts = "edge_tts"
+
             env_path = settings.ASSETS_DIR.parent / ".env"
             with open(env_path, "w", encoding="utf-8") as f:
                 f.write(f'GROQ_API_KEY="{new_groq}"\n')
                 f.write(f'GEMINI_API_KEY="{new_gemini}"\n')
                 f.write(f'DEFAULT_LLM_PROVIDER="{new_provider}"\n')
-                f.write(f'TTS_PROVIDER="{settings.TTS_PROVIDER}"\n')
+                f.write(f'TTS_PROVIDER="{new_tts}"\n')
                 f.write(f'ELEVENLABS_VOICE_ID="{settings.ELEVENLABS_VOICE_ID}"\n')
                 f.write(f'AUDIO_OUTPUT_DEVICE_INDEX="{new_dev_idx}"\n')
 
             settings.GROQ_API_KEY = new_groq
             settings.GEMINI_API_KEY = new_gemini
             settings.DEFAULT_LLM_PROVIDER = new_provider
+            settings.TTS_PROVIDER = new_tts
             settings.AUDIO_OUTPUT_DEVICE_INDEX = new_dev_idx or None
+
+            from voice.tts import get_tts_engine
+            self.orchestrator.tts = get_tts_engine(new_tts)
             self.orchestrator.llm._init_client()
 
             messagebox.showinfo("Saved", "Configuration updated successfully!")

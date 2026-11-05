@@ -139,7 +139,7 @@ class AssistantOrchestrator:
         await self.process_text_turn(transcript)
 
     async def process_text_turn(self, user_text: str):
-        """Processes a textual user prompt through LLM and streams spoken response."""
+        """Processes a textual user prompt through LLM and streams spoken response with parallel pipelining."""
         self.state_machine.transition_to(AssistantState.PROCESSING)
         self.memory.add_user_message(user_text)
 
@@ -148,29 +148,46 @@ class AssistantOrchestrator:
         sentence_stream = self.sentence_chunker.chunk_stream(token_stream)
 
         self.state_machine.transition_to(AssistantState.SPEAKING)
-        first_audio_played = False
         start_time = time.time()
+        audio_queue: asyncio.Queue[tuple[str, bytes] | None] = asyncio.Queue(maxsize=5)
 
-        try:
-            async for sentence in sentence_stream:
-                if self.state_machine.current_state == AssistantState.INTERRUPTED:
-                    console.print("\n[yellow][Interrupted][/yellow]")
+        async def synthesizer_producer():
+            """Synthesizes incoming sentence clauses in parallel in the background."""
+            try:
+                async for sentence in sentence_stream:
+                    if self.state_machine.current_state == AssistantState.INTERRUPTED:
+                        break
+                    audio_bytes = await self.tts.synthesize(sentence)
+                    if audio_bytes:
+                        await audio_queue.put((sentence, audio_bytes))
+            except Exception as e:
+                logger.error(f"Error in parallel TTS synthesizer: {e}")
+            finally:
+                await audio_queue.put(None)  # Sentinel to mark completion
+
+        async def playback_consumer():
+            """Plays synthesized audio as soon as each clause is ready."""
+            first_audio_played = False
+            while True:
+                item = await audio_queue.get()
+                if item is None or self.state_machine.current_state == AssistantState.INTERRUPTED:
                     break
 
+                sentence, audio_bytes = item
                 console.print(f"[cyan]{sentence}[/cyan] ", end="")
 
-                # Synthesize sentence audio
-                audio_bytes = await self.tts.synthesize(sentence)
                 if not first_audio_played:
                     ttfa = (time.time() - start_time) * 1000
                     logger.info(f"Time-to-First-Audio (TTFA): {ttfa:.1f}ms")
                     first_audio_played = True
 
-                # Play audio chunk (aborts if interrupted)
-                success = player.play_bytes(audio_bytes)
+                success = await asyncio.to_thread(player.play_bytes, audio_bytes)
                 if not success:
                     break
 
+        try:
+            # Run parallel producer (TTS synthesis) and consumer (audio playback) concurrently
+            await asyncio.gather(synthesizer_producer(), playback_consumer())
             console.print()
         finally:
             if self.state_machine.current_state != AssistantState.INTERRUPTED:

@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     LOCAL_WHISPER_MODEL: str = "base.en"
 
     # TTS Configuration
-    TTS_PROVIDER: str = Field(default="edge_tts")  # "edge_tts" or "elevenlabs"
+    TTS_PROVIDER: str = Field(default="edge_tts")  # "edge_tts", "sapi" (ultra-fast 150ms), or "elevenlabs"
     EDGE_TTS_VOICE: str = "en-GB-RyanNeural"  # Crisp, formal British male accent
     ELEVENLABS_API_KEY: str = Field(default="")
     ELEVENLABS_VOICE_ID: str = Field(default="")
@@ -52,9 +52,9 @@ class Settings(BaseSettings):
     AUDIO_INPUT_DEVICE_INDEX: str | None = None
     AUDIO_OUTPUT_DEVICE_INDEX: str | None = None
 
-    # VAD & Turn-Taking
-    VOICE_ACTIVITY_THRESHOLD: float = 0.5
-    SILENCE_TIMEOUT_MS: int = 350  # milliseconds of silence to trigger end-of-speech
+    # VAD & Turn-Taking (Aggressive 220ms silence timeout for minimal latency)
+    VOICE_ACTIVITY_THRESHOLD: float = 0.015
+    SILENCE_TIMEOUT_MS: int = 220  # milliseconds of silence to trigger end-of-speech
 
     # Vision & Screen Analysis
     VISION_MODEL: str = "llama-3.2-11b-vision-preview"

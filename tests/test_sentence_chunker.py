@@ -18,10 +18,11 @@ async def test_sentence_chunker_splitting():
     async for chunk in chunker.chunk_stream(token_generator()):
         chunks.append(chunk)
 
-    assert len(chunks) == 3
-    assert chunks[0] == "Good morning, sir."
-    assert chunks[1] == "All systems are operational!"
-    assert chunks[2] == "How may I assist?"
+    assert len(chunks) == 4
+    assert chunks[0] == "Good morning,"
+    assert chunks[1] == "sir."
+    assert chunks[2] == "All systems are operational!"
+    assert chunks[3] == "How may I assist?"
 
 
 def test_markdown_cleaning():

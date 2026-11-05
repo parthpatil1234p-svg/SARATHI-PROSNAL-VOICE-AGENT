@@ -20,6 +20,13 @@ class WhisperSTT(BaseSTT):
     def __init__(self, model_size: str = "base.en"):
         self.model_size = model_size
         self._local_model = None
+        self._groq_client = None
+        if settings.GROQ_API_KEY:
+            try:
+                from groq import Groq
+                self._groq_client = Groq(api_key=settings.GROQ_API_KEY)
+            except Exception as e:
+                logger.warning(f"Failed to pre-init Groq Whisper client: {e}")
 
     def _get_wav_bytes(self, audio_bytes: bytes, sample_rate: int = 16000) -> io.BytesIO:
         """Encodes raw PCM bytes into an in-memory WAV file."""
@@ -37,14 +44,11 @@ class WhisperSTT(BaseSTT):
         if not audio_bytes:
             return ""
 
-        # Option 1: Fast Groq Whisper Cloud if GROQ_API_KEY is configured
-        if settings.GROQ_API_KEY:
+        # Option 1: Fast Groq Whisper Cloud with persistent connection
+        if self._groq_client:
             try:
-                from groq import Groq
-                client = Groq(api_key=settings.GROQ_API_KEY)
                 wav_file = self._get_wav_bytes(audio_bytes, sample_rate)
-
-                transcription = client.audio.transcriptions.create(
+                transcription = self._groq_client.audio.transcriptions.create(
                     file=wav_file,
                     model="whisper-large-v3-turbo",
                     prompt="Conversation with Tony Stark's personal assistant Jarvis.",
