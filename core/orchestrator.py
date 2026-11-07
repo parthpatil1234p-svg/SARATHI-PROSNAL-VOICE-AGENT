@@ -137,9 +137,10 @@ class AssistantOrchestrator:
 
                     chunk = self.audio_stream.read_chunk(timeout=0.1)
                     if chunk is not None:
-                        # Fast-path A: Active dialogue follow-up window
+                        # Fast-path A: Continuous voice mode or active dialogue follow-up window
+                        is_continuous = getattr(settings, "CONTINUOUS_VOICE_MODE", True)
                         in_dialogue_window = time.time() < self.active_conversation_timeout
-                        if in_dialogue_window and self.vad.is_speech(chunk):
+                        if (is_continuous or in_dialogue_window) and self.vad.is_speech(chunk):
                             self.state_machine.transition_to(AssistantState.LISTENING)
                             self.vad.start_speech(chunk)
                             continue
@@ -156,7 +157,7 @@ class AssistantOrchestrator:
                             self.idle_vad.reset()
                             continue
 
-                        # Robust Path C: Acoustic Speech Activity in IDLE for "Hey Sarathi" / "Sarathi"
+                        # Robust Path C: Acoustic Speech Activity in IDLE for "Hey Sarathi" / direct speech
                         has_speech, wake_turn_completed, wake_audio = self.idle_vad.process_frame(chunk)
                         if wake_turn_completed and wake_audio:
                             try:
@@ -166,7 +167,8 @@ class AssistantOrchestrator:
                                     "sarathi", "sarthi", "sarathy", "sarath", "sarti",
                                     "surathi", "सारथी", "hey sarathi", "hey sarthi", "hey jarvis"
                                 )
-                                if any(kw in cleaned for kw in wake_keywords):
+                                matched_wake = any(kw in cleaned for kw in wake_keywords)
+                                if matched_wake:
                                     console.print(f"[bold green]🔔 Wake word matched: '{transcript}'[/bold green]")
                                     self.active_conversation_timeout = time.time() + 15.0
                                     self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
@@ -182,6 +184,14 @@ class AssistantOrchestrator:
                                     else:
                                         self.state_machine.transition_to(AssistantState.LISTENING)
                                         self.vad.reset()
+                                elif len(cleaned.split()) >= 1 and cleaned not in (
+                                    "", "you", "thanks for watching", "thank you for watching",
+                                    "subtitles", "subtitles by", "subtitle", ".", "...", "[music]", "[applause]"
+                                ):
+                                    console.print(f"[bold cyan]Direct speech turn processed: '{transcript}'[/bold cyan]")
+                                    self.active_conversation_timeout = time.time() + 10.0
+                                    self.state_machine.transition_to(AssistantState.PROCESSING)
+                                    await self.process_text_turn(transcript)
                             except Exception as e:
                                 logger.error(f"Error evaluating idle wake audio: {e}")
                             finally:
@@ -328,15 +338,30 @@ class AssistantOrchestrator:
             console.print(f"[bold white]User:[/bold white] {transcript} [dim]({stt_latency:.0f}ms STT)[/dim]")
             await event_bus.publish("user_speech", {"text": transcript, "latency_ms": round(stt_latency, 1)})
 
+            # Check if user spoke pure wake word or prefaced command with wake word
+            wake_phrases = (
+                "sarathi", "sarthi", "sarathy", "sarath", "sarti",
+                "surathi", "सारथी", "hey sarathi", "hey sarthi", "hey jarvis"
+            )
+            if cleaned in wake_phrases:
+                audio_started_event.set()
+                await self.speak_direct("Yes sir, I'm listening.", tracker=tracker)
+                self.state_machine.transition_to(AssistantState.LISTENING)
+                self.vad.reset()
+                return
+
+            post_cmd = self._extract_post_wake_command(transcript)
+            effective_text = post_cmd if post_cmd else transcript
+
             # Check for direct stop commands
-            if transcript.lower().strip() in ("stop", "quiet", "cancel", "nevermind", "shut up"):
+            if effective_text.lower().strip() in ("stop", "quiet", "cancel", "nevermind", "shut up"):
                 player.interrupt()
                 await event_bus.publish("barge_in", {})
                 self.state_machine.transition_to(AssistantState.IDLE)
                 return
 
             # Check for direct shutdown / exit commands
-            cleaned_cmd = transcript.lower().strip().rstrip(".,!?")
+            cleaned_cmd = effective_text.lower().strip().rstrip(".,!?")
             if any(term in cleaned_cmd for term in ("shut down", "power off", "shutdown", "exit sarathi", "sarathi exit", "sarathi quit")):
                 console.print("[bold red]🛑 Voice shutdown command received.[/bold red]")
                 audio_started_event.set()
@@ -350,7 +375,7 @@ class AssistantOrchestrator:
             # Check for rule/intent fast path (bypasses LLM for deterministic queries)
             if settings.ENABLE_RULE_FAST_PATH:
                 from core.fast_path import check_fast_path
-                fp = check_fast_path(transcript)
+                fp = check_fast_path(effective_text)
                 if fp.matched:
                     audio_started_event.set()
                     tracker.mark_llm_first_token()
@@ -364,7 +389,7 @@ class AssistantOrchestrator:
                     self.state_machine.transition_to(AssistantState.IDLE)
                     return
 
-            await self.process_text_turn(transcript, tracker=tracker, audio_started_event=audio_started_event)
+            await self.process_text_turn(effective_text, tracker=tracker, audio_started_event=audio_started_event)
         finally:
             audio_started_event.set()
             if filler_task and not filler_task.done():

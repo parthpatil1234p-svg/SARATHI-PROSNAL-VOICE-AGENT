@@ -116,9 +116,8 @@ class WhisperSTT(BaseSTT):
                 transcription_coro = self._groq_client.audio.transcriptions.create(
                     file=audio_file,
                     model="whisper-large-v3-turbo",
-                    prompt="Conversation with personal AI assistant Sarathi. Commands and conversation in English and Hindi.",
+                    prompt="Sarathi AI assistant conversation in English or Hindi.",
                     response_format="text",
-                    language="en",
                     temperature=0.0
                 )
                 transcription = await asyncio.wait_for(
@@ -126,6 +125,9 @@ class WhisperSTT(BaseSTT):
                     timeout=settings.GROQ_TIMEOUT_SEC
                 )
                 text = str(transcription).strip()
+                # Suppress prompt reflection hallucinations on quiet frames
+                if text.lower() in ("sarathi ai assistant conversation in english or hindi.", "sarathi ai assistant", "commands and conversation in english and hindi."):
+                    return ""
                 logger.info(f"Groq Whisper transcription: '{text}'")
                 return text
             except asyncio.TimeoutError:

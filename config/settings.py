@@ -73,7 +73,9 @@ class Settings(BaseSettings):
     ENABLE_LATENCY_METRICS: bool = True
     GROQ_REASONING_EFFORT: str = "low"  # "low", "medium", "high"
     ENABLE_LLM_LOW_LATENCY: bool = True
-    ENABLE_RULE_FAST_PATH: bool = True
+    ENABLE_RULE_FAST_PATH: bool = False  # Set to False so conversational queries and greetings hit Groq LLM
+    CONTINUOUS_VOICE_MODE: bool = True  # Listens continuously when voice mode is engaged without needing wake word every sentence
+    MOBILE_NOTIFY_TOPIC: str = "sarathi_parth_alerts"
     ENABLE_PERSISTENT_HTTP_CLIENT: bool = True
     ENABLE_FLAC_COMPRESSION: bool = True
     GROQ_TIMEOUT_SEC: float = 3.0
