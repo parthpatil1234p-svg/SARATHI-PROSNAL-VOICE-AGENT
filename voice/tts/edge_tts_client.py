@@ -9,7 +9,7 @@ import edge_tts
 from config.settings import settings
 from voice.tts.base import BaseTTS
 
-logger = logging.getLogger("JARVIS.EdgeTTS")
+logger = logging.getLogger("SARATHI.EdgeTTS")
 
 
 class EdgeTTSClient(BaseTTS):

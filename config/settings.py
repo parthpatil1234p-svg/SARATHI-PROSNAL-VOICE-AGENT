@@ -69,6 +69,19 @@ class Settings(BaseSettings):
     VOICE_ACTIVITY_THRESHOLD: float = 0.028
     SILENCE_TIMEOUT_MS: int = 450  # 450ms natural pause before finalizing speech turn
 
+    # Latency Optimization & Metric Flags
+    ENABLE_LATENCY_METRICS: bool = True
+    GROQ_REASONING_EFFORT: str = "low"  # "low", "medium", "high"
+    ENABLE_LLM_LOW_LATENCY: bool = True
+    ENABLE_RULE_FAST_PATH: bool = True
+    ENABLE_PERSISTENT_HTTP_CLIENT: bool = True
+    ENABLE_FLAC_COMPRESSION: bool = True
+    GROQ_TIMEOUT_SEC: float = 3.0
+    VAD_ENGINE: str = "silero"  # "rms" or "silero"
+    ENABLE_SPECULATIVE_STT: bool = False
+    ENABLE_PIPELINED_TTS_QUEUE: bool = True
+    ENABLE_EARLY_FILLERS: bool = True
+
     # Vision & Screen Analysis
     VISION_MODEL: str = "llama-3.2-11b-vision-preview"
 

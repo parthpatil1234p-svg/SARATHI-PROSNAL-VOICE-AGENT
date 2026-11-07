@@ -1,15 +1,15 @@
-"""Tests for J.A.R.V.I.S. Mark VII Tactical HUD Web Bridge."""
+"""Tests for S.A.R.A.T.H.I. Mark VII Tactical HUD Web Bridge."""
 
 import pytest
 
 from core.orchestrator import AssistantOrchestrator
-from gui.web_bridge import JarvisWebBridge
+from gui.web_bridge import SarathiWebBridge
 
 
 @pytest.fixture
 def bridge():
     orchestrator = AssistantOrchestrator()
-    return JarvisWebBridge(orchestrator)
+    return SarathiWebBridge(orchestrator)
 
 
 def test_bridge_telemetry(bridge):
@@ -41,4 +41,9 @@ def test_bridge_quick_action_volume(bridge):
 
 def test_bridge_quick_action_purge(bridge):
     res = bridge.execute_quick_action("purge_cache")
+    assert res.get("status") == "ok"
+
+
+def test_bridge_quick_action_diagnostics(bridge):
+    res = bridge.execute_quick_action("diagnostics")
     assert res.get("status") == "ok"

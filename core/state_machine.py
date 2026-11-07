@@ -5,11 +5,11 @@ import threading
 from collections.abc import Callable
 from enum import Enum, auto
 
-logger = logging.getLogger("JARVIS.StateMachine")
+logger = logging.getLogger("SARATHI.StateMachine")
 
 
 class AssistantState(Enum):
-    IDLE = auto()               # Sleeping / listening for wake word ("Hey Jarvis")
+    IDLE = auto()               # Sleeping / listening for wake word ("Hey Sarathi")
     WAKE_DETECTED = auto()      # Wake word triggered, playing chime
     LISTENING = auto()          # Streaming user speech via microphone & VAD
     PROCESSING = auto()         # LLM thinking / generating tokens

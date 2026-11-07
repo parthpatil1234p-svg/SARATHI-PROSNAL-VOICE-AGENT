@@ -8,7 +8,7 @@ import httpx
 from config.settings import settings
 from voice.tts.base import BaseTTS
 
-logger = logging.getLogger("JARVIS.ElevenLabsTTS")
+logger = logging.getLogger("SARATHI.ElevenLabsTTS")
 
 
 class ElevenLabsTTSClient(BaseTTS):

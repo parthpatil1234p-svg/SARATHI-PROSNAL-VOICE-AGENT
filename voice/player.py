@@ -11,7 +11,7 @@ import soundfile as sf
 
 from config.settings import settings
 
-logger = logging.getLogger("JARVIS.AudioPlayer")
+logger = logging.getLogger("SARATHI.AudioPlayer")
 
 
 class InterruptibleAudioPlayer:

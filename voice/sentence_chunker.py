@@ -3,19 +3,25 @@
 import re
 from collections.abc import AsyncGenerator
 
+from config.settings import settings
+
 
 class SentenceChunker:
     """
-    Accumulates streaming LLM tokens and yields complete sentences as early as possible.
-    Splits on sentence-ending punctuation (.?!:;) and line breaks.
-    Preserves conversational flow while dropping Time-to-First-Audio to ~200ms.
+    Accumulates streaming LLM tokens and yields ready-to-speak sentence clauses.
+    Features:
+    - Minimum clause length threshold (~4 words when ENABLE_PIPELINED_TTS_QUEUE is active)
+      on commas to prevent choppy playback pauses.
+    - Full sentence punctuation (.?!:\n) splits naturally even for concise phrases.
+    - Cleans markdown formatting, emojis, brackets, and symbols before TTS delivery.
     """
 
-    def __init__(self, min_chunk_chars: int = 15):
+    def __init__(self, min_chunk_chars: int = 15, min_clause_words: int = 2):
         self.buffer = ""
         self.min_chunk_chars = min_chunk_chars
-        # Regex to match punctuation followed by whitespace, end-of-line, or quote
-        self.split_pattern = re.compile(r'([.?!;:\n]+(?:\s+|$))')
+        self.min_clause_words = min_clause_words
+        self.sentence_pattern = re.compile(r'([.?!:\n]+(?:\s+|$))')
+        self.clause_pattern = re.compile(r'([,;]+(?:\s+|$))')
 
     async def chunk_stream(
         self, token_generator: AsyncGenerator[str, None]
@@ -26,34 +32,45 @@ class SentenceChunker:
         async for token in token_generator:
             self.buffer += token
 
-            # For the very first clause, split eagerly on commas/dashes for sub-200ms TTFA
+            # 1. Check for eager first-clause boundary with minimum word length constraint
             if is_first_chunk and len(self.buffer) >= 8:
-                first_match = re.search(r'([,;:\n.?!]+(?:\s+|$))', self.buffer)
-                if first_match:
-                    end_idx = first_match.end()
-                    sentence = self.buffer[:end_idx].strip()
-                    self.buffer = self.buffer[end_idx:]
-                    is_first_chunk = False
-                    cleaned = self._clean_for_speech(sentence)
-                    if cleaned:
-                        yield cleaned
-                    continue
+                clause_match = self.clause_pattern.search(self.buffer)
+                if clause_match:
+                    end_idx = clause_match.end()
+                    candidate = self.buffer[:end_idx].strip()
+                    if len(candidate.split()) >= self.min_clause_words:
+                        self.buffer = self.buffer[end_idx:]
+                        is_first_chunk = False
+                        cleaned = self._clean_for_speech(candidate)
+                        if cleaned:
+                            yield cleaned
+                        continue
 
-            # Check standard minimum length before splitting
-            if len(self.buffer) < self.min_chunk_chars:
-                continue
-
-            match = self.split_pattern.search(self.buffer)
-            if match:
-                end_idx = match.end()
+            # 2. Check for sentence-terminating punctuation (.?!:\n)
+            sent_match = self.sentence_pattern.search(self.buffer)
+            if sent_match and len(self.buffer) >= self.min_chunk_chars:
+                end_idx = sent_match.end()
                 sentence = self.buffer[:end_idx].strip()
                 self.buffer = self.buffer[end_idx:]
                 is_first_chunk = False
-
-                # Clean markdown formatting artifacts from text before TTS
                 cleaned = self._clean_for_speech(sentence)
                 if cleaned:
                     yield cleaned
+                continue
+
+            # 3. Check for mid-sentence comma/semicolon clause splits with word threshold
+            if len(self.buffer) >= self.min_chunk_chars:
+                clause_match = self.clause_pattern.search(self.buffer)
+                if clause_match:
+                    end_idx = clause_match.end()
+                    candidate = self.buffer[:end_idx].strip()
+                    if len(candidate.split()) >= self.min_clause_words:
+                        self.buffer = self.buffer[end_idx:]
+                        is_first_chunk = False
+                        cleaned = self._clean_for_speech(candidate)
+                        if cleaned:
+                            yield cleaned
+                        continue
 
         # Flush any trailing words
         trailing = self.buffer.strip()
@@ -74,10 +91,10 @@ class SentenceChunker:
         text = re.sub(r'\*+', '', text)
         # Remove markdown headers (#)
         text = re.sub(r'#+\s*', '', text)
-        # Remove inline backticks
-        text = re.sub(r'`+', '', text)
-        # Remove bracketed references [1], [image], etc.
+        # Remove markdown link formatting and brackets [link] -> ""
         text = re.sub(r'\[.*?\]', '', text)
-        # Normalize excessive whitespace
+        # Remove backticks / code fences
+        text = re.sub(r'`+', '', text)
+        # Collapse extra whitespaces
         text = re.sub(r'\s+', ' ', text)
         return text.strip()

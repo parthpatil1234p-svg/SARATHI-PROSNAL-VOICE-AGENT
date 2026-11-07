@@ -12,7 +12,7 @@ import soundfile as sf
 
 from voice.tts.base import BaseTTS
 
-logger = logging.getLogger("JARVIS.SapiTTS")
+logger = logging.getLogger("SARATHI.SapiTTS")
 
 
 class SapiTTSClient(BaseTTS):
@@ -47,12 +47,28 @@ class SapiTTSClient(BaseTTS):
 
     def _synthesize_sync(self, text: str) -> bytes:
         temp_path = None
+        co_init = False
         try:
+            try:
+                import pythoncom
+                pythoncom.CoInitialize()
+                co_init = True
+            except Exception:
+                pass
+
+            engine = pyttsx3.init()
+            engine.setProperty("rate", self.rate)
+            voices = engine.getProperty("voices")
+            for v in voices:
+                if "british" in v.name.lower() or "george" in v.name.lower() or "hazel" in v.name.lower():
+                    engine.setProperty("voice", v.id)
+                    break
+
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
                 temp_path = f.name
 
-            self._engine.save_to_file(text, temp_path)
-            self._engine.runAndWait()
+            engine.save_to_file(text, temp_path)
+            engine.runAndWait()
 
             with open(temp_path, "rb") as f:
                 return f.read()
@@ -63,6 +79,12 @@ class SapiTTSClient(BaseTTS):
             if temp_path:
                 try:
                     Path(temp_path).unlink(missing_ok=True)
+                except Exception:
+                    pass
+            if co_init:
+                try:
+                    import pythoncom
+                    pythoncom.CoUninitialize()
                 except Exception:
                     pass
 

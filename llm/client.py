@@ -9,7 +9,7 @@ from core.event_bus import event_bus
 from llm.memory import ConversationMemory
 from tools.registry import execute_tool, get_all_tool_schemas
 
-logger = logging.getLogger("JARVIS.LLMClient")
+logger = logging.getLogger("SARATHI.LLMClient")
 
 
 class LLMClient:
@@ -29,9 +29,14 @@ class LLMClient:
     def _init_client(self):
         if settings.GROQ_API_KEY:
             try:
-                from groq import AsyncGroq
-                self._groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
-                logger.info("Groq Async client initialized.")
+                if settings.ENABLE_PERSISTENT_HTTP_CLIENT:
+                    from core.http_client import get_shared_groq_async_client
+                    self._groq_client = get_shared_groq_async_client()
+                    logger.info("Groq Async client initialized with persistent HTTP/2 pool.")
+                else:
+                    from groq import AsyncGroq
+                    self._groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
+                    logger.info("Groq Async client initialized.")
             except Exception as e:
                 logger.warning(f"Groq client init error: {e}")
 
@@ -119,14 +124,21 @@ class LLMClient:
         self, memory: ConversationMemory, messages: list[dict], tools: list[dict]
     ) -> AsyncGenerator[str, None]:
         try:
+            extra_kwargs = {}
+            if "gpt-oss" in self.model.lower() or "reasoning" in self.model.lower():
+                extra_kwargs["reasoning_effort"] = settings.GROQ_REASONING_EFFORT
+
+            max_tokens = 120 if settings.ENABLE_LLM_LOW_LATENCY else 300
+
             stream = await self._groq_client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 tools=tools if tools else None,
                 tool_choice="auto" if tools else None,
                 temperature=0.3,
-                max_tokens=300,
-                stream=True
+                max_tokens=max_tokens,
+                stream=True,
+                **extra_kwargs
             )
 
             tool_calls_accumulator = {}
@@ -137,8 +149,8 @@ class LLMClient:
                 if not delta:
                     continue
 
-                # Stream standard content tokens
-                if delta.content:
+                # Stream standard content tokens (strictly content, never delta.reasoning)
+                if hasattr(delta, "content") and delta.content:
                     current_assistant_content += delta.content
                     yield delta.content
 

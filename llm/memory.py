@@ -1,25 +1,29 @@
-"""Conversational memory and context management for J.A.R.V.I.S."""
+"""Conversational memory and context management for S.A.R.A.T.H.I."""
 
 from typing import Any
 
-from config.persona import JARVIS_SYSTEM_PROMPT
+from config.persona import SARATHI_CONCISE_PROMPT, SARATHI_SYSTEM_PROMPT
 from config.settings import settings
 
 
 class ConversationMemory:
     """
     Maintains a sliding token window of conversational turns.
-    Always anchors the J.A.R.V.I.S. system prompt at position 0.
+    Always anchors the S.A.R.A.T.H.I. system prompt at position 0.
     """
 
-    def __init__(self, max_turns: int = 12):
-        self.max_turns = max_turns
+    def __init__(self, max_turns: int | None = None):
+        if max_turns is not None:
+            self.max_turns = max_turns
+        else:
+            self.max_turns = 6 if settings.ENABLE_LLM_LOW_LATENCY else 12
         self.messages: list[dict[str, Any]] = []
         self.reset()
 
     def reset(self):
         """Initializes memory with the persona system prompt."""
-        formatted_prompt = JARVIS_SYSTEM_PROMPT.format(user_name=settings.USER_NAME)
+        prompt_tmpl = SARATHI_CONCISE_PROMPT if settings.ENABLE_LLM_LOW_LATENCY else SARATHI_SYSTEM_PROMPT
+        formatted_prompt = prompt_tmpl.format(user_name=settings.USER_NAME)
         self.messages = [
             {"role": "system", "content": formatted_prompt}
         ]

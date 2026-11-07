@@ -9,7 +9,7 @@ import httpx
 
 from config.settings import settings
 
-logger = logging.getLogger("JARVIS.VoiceCloner")
+logger = logging.getLogger("SARATHI.VoiceCloner")
 
 
 class VoiceCloner:

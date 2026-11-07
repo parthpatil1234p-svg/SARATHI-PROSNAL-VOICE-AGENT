@@ -8,7 +8,7 @@ import numpy as np
 
 from config.settings import settings
 
-logger = logging.getLogger("JARVIS.WakeWord")
+logger = logging.getLogger("SARATHI.WakeWord")
 
 
 class WakeWordDetector:

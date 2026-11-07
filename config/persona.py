@@ -22,6 +22,12 @@ CORE PERSONALITY & VOICE GUIDELINES:
 # Backwards compatibility alias
 JARVIS_SYSTEM_PROMPT = SARATHI_SYSTEM_PROMPT
 
+SARATHI_CONCISE_PROMPT = """You are SARATHI, loyal AI desktop assistant for {user_name} on Windows 11.
+Rules:
+1. Speak in 1-2 short, conversational sentences. Never use lists, bullet points, markdown, emojis, or code blocks.
+2. English or natural Hinglish matching user language.
+3. Be direct, polite, and helpful."""
+
 SARATHI_ACKNOWLEDGMENT_PHRASES = [
     "At your service, sir.",
     "Right away, sir.",

@@ -7,7 +7,7 @@ import httpx
 from config.settings import settings
 from voice.stt.base import BaseSTT
 
-logger = logging.getLogger("JARVIS.DeepgramSTT")
+logger = logging.getLogger("SARATHI.DeepgramSTT")
 
 
 class DeepgramSTT(BaseSTT):

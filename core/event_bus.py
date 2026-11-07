@@ -5,7 +5,7 @@ import logging
 from collections.abc import Callable, Coroutine
 from typing import Any
 
-logger = logging.getLogger("JARVIS.EventBus")
+logger = logging.getLogger("SARATHI.EventBus")
 
 
 class EventBus:

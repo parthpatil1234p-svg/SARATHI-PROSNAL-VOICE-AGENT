@@ -7,7 +7,7 @@ from collections.abc import Generator
 import numpy as np
 import sounddevice as sd
 
-logger = logging.getLogger("JARVIS.AudioStream")
+logger = logging.getLogger("SARATHI.AudioStream")
 
 
 class AudioInputStream:
