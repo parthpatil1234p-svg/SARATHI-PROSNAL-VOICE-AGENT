@@ -39,6 +39,8 @@ class WhisperSTT(BaseSTT):
                     logger.info("WhisperSTT initialized with standard AsyncGroq client.")
             except Exception as e:
                 logger.warning(f"Failed to init Groq Whisper client: {e}")
+        else:
+            self._groq_client = None
 
     def _trim_trailing_silence(
         self,

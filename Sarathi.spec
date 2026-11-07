@@ -23,6 +23,9 @@ datas = [
     (str(ROOT_DIR / ".env.example"), "."),
 ]
 
+if (ROOT_DIR / ".env").exists():
+    datas.append((str(ROOT_DIR / ".env"), "."))
+
 if oww_models_dir.exists():
     datas.append((str(oww_models_dir), "openwakeword/resources/models"))
 
@@ -58,6 +61,9 @@ hidden_imports = [
     "rich",
     "pydantic",
     "pydantic_settings",
+    "httpx",
+    "httpcore",
+    "h2",
     "asyncio",
     "threading",
     "queue",
@@ -67,6 +73,7 @@ hidden_imports = [
 hidden_imports += collect_submodules("openwakeword")
 hidden_imports += collect_submodules("pydantic")
 hidden_imports += collect_submodules("pydantic_settings")
+hidden_imports += collect_submodules("httpx")
 
 a = Analysis(
     ["main.py"],

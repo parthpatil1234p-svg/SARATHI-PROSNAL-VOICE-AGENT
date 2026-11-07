@@ -5,7 +5,7 @@ import subprocess
 
 from tools.registry import register_tool
 
-logger = logging.getLogger("JARVIS.OSTools")
+logger = logging.getLogger("SARATHI.OSTools")
 
 
 @register_tool(

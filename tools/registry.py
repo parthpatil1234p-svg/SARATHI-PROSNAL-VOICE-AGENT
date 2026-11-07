@@ -6,7 +6,7 @@ import logging
 from collections.abc import Callable
 from typing import Any, get_type_hints
 
-logger = logging.getLogger("JARVIS.ToolRegistry")
+logger = logging.getLogger("SARATHI.ToolRegistry")
 
 # Global tool registry: name -> (function, openai_schema)
 _TOOL_REGISTRY: dict[str, tuple[Callable, dict]] = {}

@@ -47,3 +47,45 @@ def test_bridge_quick_action_purge(bridge):
 def test_bridge_quick_action_diagnostics(bridge):
     res = bridge.execute_quick_action("diagnostics")
     assert res.get("status") == "ok"
+
+
+def test_bridge_save_settings_persistence(bridge, tmp_path, monkeypatch):
+    test_env = tmp_path / ".env"
+    test_env.write_text('DEFAULT_LLM_PROVIDER="groq"\nASSISTANT_NAME="SARATHI"\n', encoding="utf-8")
+
+    from config.settings import settings
+    monkeypatch.setattr("gui.web_bridge.EXE_DIR", tmp_path)
+    monkeypatch.setattr("gui.web_bridge.BASE_DIR", tmp_path)
+
+    payload = {
+        "groq_key": "gsk_test_mock_12345",
+        "gemini_key": "AIza_mock_67890",
+        "elevenlabs_key": "xi_mock_abcdef",
+        "elevenlabs_voice_id": "voice_mock_xyz",
+        "llm_provider": "gemini",
+        "tts_provider": "sapi"
+    }
+
+    res = bridge.save_settings(payload)
+    assert res.get("status") == "success"
+
+    # Check settings on runtime object
+    assert settings.GROQ_API_KEY == "gsk_test_mock_12345"
+    assert settings.GEMINI_API_KEY == "AIza_mock_67890"
+    assert settings.ELEVENLABS_API_KEY == "xi_mock_abcdef"
+    assert settings.ELEVENLABS_VOICE_ID == "voice_mock_xyz"
+    assert settings.DEFAULT_LLM_PROVIDER == "gemini"
+    assert settings.TTS_PROVIDER == "sapi"
+
+    # Check initial data returned to frontend HUD
+    init_data = bridge.get_initial_data()
+    assert init_data["settings"]["groq_api_key"] == "gsk_test_mock_12345"
+    assert init_data["settings"]["gemini_api_key"] == "AIza_mock_67890"
+    assert init_data["settings"]["elevenlabs_api_key"] == "xi_mock_abcdef"
+    assert init_data["settings"]["cloned_voice_id"] == "voice_mock_xyz"
+
+    # Check written file contents
+    saved_content = test_env.read_text(encoding="utf-8")
+    assert 'GROQ_API_KEY="gsk_test_mock_12345"' in saved_content
+    assert 'GEMINI_API_KEY="AIza_mock_67890"' in saved_content
+    assert 'DEFAULT_LLM_PROVIDER="gemini"' in saved_content

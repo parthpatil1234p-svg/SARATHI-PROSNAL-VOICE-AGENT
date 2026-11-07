@@ -27,6 +27,12 @@ class LLMClient:
         self._init_client()
 
     def _init_client(self):
+        self.provider = settings.DEFAULT_LLM_PROVIDER.lower()
+        self.model = settings.DEFAULT_GEMINI_MODEL if self.provider == "gemini" else settings.DEFAULT_LLM_MODEL
+        self._groq_client = None
+        self._gemini_client = None
+        self._openai_client = None
+
         if settings.GROQ_API_KEY:
             try:
                 if settings.ENABLE_PERSISTENT_HTTP_CLIENT:

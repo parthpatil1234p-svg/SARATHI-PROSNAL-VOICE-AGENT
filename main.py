@@ -61,18 +61,18 @@ async def run_interactive_cli(orchestrator: AssistantOrchestrator):
                 continue
 
             if cleaned.lower() in ("exit", "quit", "q"):
-                console.print("[cyan]JARVIS: Shutting down systems. Goodbye, sir.[/cyan]")
+                console.print("[cyan]SARATHI: Shutting down systems. Goodbye, sir.[/cyan]")
                 break
 
             await orchestrator.process_text_turn(cleaned)
 
         except (KeyboardInterrupt, EOFError):
-            console.print("\n[cyan]JARVIS: Standing down. Good day, sir.[/cyan]")
+            console.print("\n[cyan]SARATHI: Standing down. Good day, sir.[/cyan]")
             break
 
 
 async def main():
-    parser = argparse.ArgumentParser(description="J.A.R.V.I.S. AI Voice Assistant")
+    parser = argparse.ArgumentParser(description="S.A.R.A.T.H.I. AI Voice Assistant")
     parser.add_argument("--gui", "--hud", action="store_true", help="Launch the Mark VII Tactical Desktop HUD")
     parser.add_argument("--tk", action="store_true", help="Launch the CustomTkinter GUI instead of the Web HUD")
     parser.add_argument("--cli", action="store_true", help="Run in interactive CLI mode (Type prompt, hear voice)")

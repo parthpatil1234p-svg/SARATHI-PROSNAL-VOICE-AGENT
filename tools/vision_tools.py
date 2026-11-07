@@ -10,7 +10,7 @@ from PIL import Image
 from config.settings import settings
 from tools.registry import register_tool
 
-logger = logging.getLogger("JARVIS.VisionTools")
+logger = logging.getLogger("SARATHI.VisionTools")
 
 
 def grab_desktop_screenshot_base64(max_width: int = 1280) -> str:

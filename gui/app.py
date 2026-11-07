@@ -197,7 +197,7 @@ class JarvisDesktopApp(ctk.CTk):
             corner_radius=12
         )
         self.transcript_box.grid(row=1, column=0, sticky="nsew", padx=0, pady=(0, 15))
-        self.append_log("SYSTEM", "J.A.R.V.I.S. Core operational. Ready for voice interaction or command prompt.")
+        self.append_log("SYSTEM", "S.A.R.A.T.H.I. Core operational. Ready for voice interaction or command prompt.")
 
         # Bottom Input Bar (Command Prompt)
         bottom_bar = ctk.CTkFrame(main_frame, fg_color="transparent")
@@ -234,7 +234,7 @@ class JarvisDesktopApp(ctk.CTk):
     def _on_state_change(self, old_state: AssistantState, new_state: AssistantState):
         """Dispatched on state change from core state machine."""
         state_map = {
-            AssistantState.IDLE: ("● LISTENING ('Hey Jarvis')", COLOR_CYAN, "#082A3A"),
+            AssistantState.IDLE: ("● LISTENING ('Hey Sarathi')", COLOR_CYAN, "#082A3A"),
             AssistantState.WAKE_DETECTED: ("🔔 WAKE DETECTED", COLOR_GREEN, "#063A22"),
             AssistantState.LISTENING: ("🎤 CAPTURING SPEECH", COLOR_GREEN, "#063A22"),
             AssistantState.PROCESSING: ("⚡ PROCESSING...", "#FFB703", "#3D2B00"),
@@ -293,7 +293,7 @@ class JarvisDesktopApp(ctk.CTk):
         if not self.is_voice_mode_active:
             self.is_voice_mode_active = True
             self.btn_voice_mode.configure(text="🛑 STOP VOICE MODE", fg_color=COLOR_RED, hover_color="#D90429")
-            self.append_log("VOICE", "Voice Mode Activated. Listening for wake word 'Hey Jarvis'...")
+            self.append_log("VOICE", "Voice Mode Activated. Listening for wake word 'Hey Sarathi'...")
 
             def run_async():
                 self.loop = asyncio.new_event_loop()
@@ -337,7 +337,7 @@ class JarvisDesktopApp(ctk.CTk):
         if self.orchestrator.memory.messages:
             last_resp = self.orchestrator.memory.messages[-1].get("content", "")
             if last_resp:
-                self.after(0, lambda: self.append_log("JARVIS", last_resp))
+                self.after(0, lambda: self.append_log("SARATHI", last_resp))
 
     def append_log(self, sender: str, message: str):
         """Appends formatted message to the live transcript textbox."""

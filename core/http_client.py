@@ -69,6 +69,14 @@ def get_shared_groq_async_client() -> AsyncGroq | None:
     return _shared_groq_async_client
 
 
+def reset_shared_clients() -> None:
+    """Resets shared client instances so new API keys or credentials take effect immediately."""
+    global _shared_groq_async_client, _warmup_completed
+    _shared_groq_async_client = None
+    _warmup_completed = False
+    logger.info("Shared Groq client singleton reset for updated credentials.")
+
+
 async def warmup_groq_connections() -> None:
     """
     Sends tiny dummy requests to warm TLS handshakes and HTTP/2 sockets for both LLM and STT endpoints.

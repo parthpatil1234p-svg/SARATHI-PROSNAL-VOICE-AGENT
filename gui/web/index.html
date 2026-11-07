@@ -97,7 +97,7 @@
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-1.5 text-primary-container">
         <span class="material-symbols-outlined text-[18px]">token</span>
-        <span class="font-label text-[10px] uppercase tracking-widest font-bold">STARK IND</span>
+        <span class="font-label text-[10px] uppercase tracking-widest font-bold">SARATHI AI</span>
       </div>
       <span class="text-outline-variant font-telemetry text-xs">|</span>
       <span class="font-telemetry text-xs text-on-surface-variant font-medium tracking-tight">S.A.R.A.T.H.I. // Tactical Environment [W-11]</span>
@@ -136,18 +136,11 @@
         </button>
       </nav>
 
-      <!-- Window Control Buttons (Native IPC Bridge) -->
-      <div class="flex items-center ml-2 bg-surface-container-highest rounded overflow-hidden border border-outline-variant/30">
-        <button aria-label="Minimize" class="h-6 w-7 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" onclick="window.pywebview?.api.minimize_window()" type="button">
-          <span class="material-symbols-outlined text-[13px]">minimize</span>
-        </button>
-        <button aria-label="Maximize" class="h-6 w-7 flex items-center justify-center text-on-surface-variant hover:bg-surface-bright hover:text-on-surface transition-colors" onclick="window.pywebview?.api.maximize_window()" type="button">
-          <span class="material-symbols-outlined text-[12px]">check_box_outline_blank</span>
-        </button>
-        <button aria-label="Close" class="h-6 w-7 flex items-center justify-center text-on-surface-variant hover:bg-error-container hover:text-on-error-container transition-colors" onclick="window.pywebview?.api.close_window()" type="button">
-          <span class="material-symbols-outlined text-[13px]">close</span>
-        </button>
-      </div>
+      <!-- System Power Down / Exit Button -->
+      <button aria-label="Power Down" title="Completely Exit / Power Off SARATHI" class="flex items-center gap-1.5 px-3 py-1 rounded bg-error-container/20 border border-error/40 text-error hover:bg-error hover:text-on-error transition-all font-telemetry text-[11px] ml-2 shadow-sm" onclick="confirmPowerOff()" type="button">
+        <span class="material-symbols-outlined text-[14px]">power_settings_new</span>
+        <span class="font-bold tracking-wider">EXIT</span>
+      </button>
     </div>
   </header>
 
@@ -354,7 +347,7 @@
           <div class="mt-4 flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-high/90 border border-surface-container-highest shadow-[0_0_14px_rgba(0,229,255,0.2)] max-w-[90%]" id="center-status-pill">
             <span class="w-2 h-2 rounded-full bg-primary-container animate-pulse" id="center-status-dot"></span>
             <span class="font-telemetry text-xs text-primary truncate" id="center-status-text">
-              HEARING: <span class="text-on-surface font-normal">Listening for "Hey Jarvis" or your command...</span>
+              HEARING: <span class="text-on-surface font-normal">Listening for "Hey Sarathi" or your command...</span>
             </span>
           </div>
         </div>
@@ -472,23 +465,23 @@
         <!-- Quick Action Buttons -->
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="font-label text-[8px] text-outline uppercase tracking-wider mr-1">QUICK TRIGGER:</span>
-          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-colors flex items-center gap-1" onclick="runQuickAction('diagnostics')">
+          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-all flex items-center gap-1 active:scale-95" onclick="runQuickAction('diagnostics', this)">
             <span class="material-symbols-outlined text-[12px]">monitor_heart</span>
             <span>Diagnostics</span>
           </button>
-          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-colors flex items-center gap-1" onclick="runQuickAction('volume_50')">
+          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-all flex items-center gap-1 active:scale-95" onclick="runQuickAction('volume_50', this)">
             <span class="material-symbols-outlined text-[12px]">volume_down</span>
             <span>Volume 50%</span>
           </button>
-          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-colors flex items-center gap-1" onclick="runQuickAction('screenshot')">
+          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-all flex items-center gap-1 active:scale-95" onclick="runQuickAction('screenshot', this)">
             <span class="material-symbols-outlined text-[12px]">screenshot_monitor</span>
             <span>Analyze Screen</span>
           </button>
-          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-colors flex items-center gap-1" id="quick-mic-mute-btn" onclick="runQuickAction('mute_mic')">
+          <button class="px-2 py-0.5 bg-surface-container hover:bg-surface-bright text-on-surface hover:text-primary font-telemetry text-[10px] uppercase rounded border border-outline-variant/30 transition-all flex items-center gap-1 active:scale-95" id="quick-mic-mute-btn" onclick="runQuickAction('mute_mic', this)">
             <span class="material-symbols-outlined text-[12px]">mic_off</span>
             <span>Mute Mic</span>
           </button>
-          <button class="px-2 py-0.5 bg-error-container/20 hover:bg-error-container/40 text-error font-telemetry text-[10px] uppercase rounded border border-error-container/40 transition-colors flex items-center gap-1" onclick="runQuickAction('purge_cache')">
+          <button class="px-2 py-0.5 bg-error-container/20 hover:bg-error-container/40 text-error font-telemetry text-[10px] uppercase rounded border border-error-container/40 transition-all flex items-center gap-1 active:scale-95" onclick="runQuickAction('purge_cache', this)">
             <span class="material-symbols-outlined text-[12px]">delete_sweep</span>
             <span>Purge Cache</span>
           </button>
@@ -500,7 +493,7 @@
           <span>|</span>
           <div>ENGINE: <span class="text-primary font-semibold" id="meta-engine">Groq OSS-20B</span></div>
           <span>|</span>
-          <div>VOICE: <span class="text-on-surface font-semibold" id="meta-voice">British Paul Bettany</span></div>
+          <div>VOICE: <span class="text-on-surface font-semibold" id="meta-voice">SARATHI AI (ElevenLabs)</span></div>
         </div>
       </div>
     </div>
@@ -642,7 +635,7 @@
         <section class="space-y-2.5">
           <div class="flex items-center justify-between border-b border-outline-variant/20 pb-1">
             <span class="font-headline text-xs font-bold uppercase text-on-surface tracking-wide">[SUBSYSTEM 01] Cognitive Brain Providers &amp; API Keys</span>
-            <span class="text-[10px] text-outline font-label">STARK_CREDENTIAL_RING</span>
+            <span class="text-[10px] text-outline font-label">SARATHI_CREDENTIAL_RING</span>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -713,6 +706,25 @@
               <div class="text-[10px] text-on-surface-variant">Personal Voice Clone</div>
             </button>
           </div>
+
+          <!-- ElevenLabs Custom Credentials & Voice ID -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <label class="font-label text-[9px] uppercase text-on-surface-variant">ElevenLabs API Key</label>
+              <div class="relative flex items-center bg-[#131b28] rounded border border-outline-variant/60 focus-within:border-primary-container">
+                <input class="w-full bg-transparent px-2.5 py-1.5 text-xs text-primary focus:outline-none" id="input-elevenlabs-key" placeholder="xi-..." type="password"/>
+                <button class="px-2 text-outline hover:text-primary" onclick="togglePasswordVisibility('input-elevenlabs-key', this)" type="button">
+                  <span class="material-symbols-outlined text-[15px]">visibility</span>
+                </button>
+              </div>
+            </div>
+            <div class="space-y-1">
+              <label class="font-label text-[9px] uppercase text-on-surface-variant">ElevenLabs Voice ID</label>
+              <div class="relative flex items-center bg-[#131b28] rounded border border-outline-variant/60 focus-within:border-primary-container">
+                <input class="w-full bg-transparent px-2.5 py-1.5 text-xs text-primary focus:outline-none font-telemetry" id="input-elevenlabs-voice-id" value="" placeholder="ElevenLabs Voice ID" type="text"/>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Section 3: Personal Voice Cloning Studio -->
@@ -738,7 +750,7 @@
 
       <!-- Modal Footer -->
       <div class="px-5 py-3 bg-surface-container-low border-t border-outline-variant/40 flex items-center justify-between flex-shrink-0">
-        <span class="text-[10px] text-outline font-telemetry">NODE: STARK_MK7 // CHANGES APPLY INSTANTLY</span>
+        <span class="text-[10px] text-outline font-telemetry">NODE: SARATHI_CORE // CHANGES APPLY INSTANTLY</span>
         <div class="flex items-center gap-2">
           <button class="px-3 py-1.5 rounded text-on-surface-variant hover:text-on-surface border border-outline-variant text-xs font-headline uppercase" onclick="toggleConfigModal(false)">
             Cancel
@@ -820,6 +832,13 @@
       const modal = document.getElementById('modal-config');
       if (show) {
         modal.classList.remove('hidden');
+        if (window.pywebview?.api) {
+          window.pywebview.api.get_initial_data().then(data => {
+            if (data && data.settings) {
+              populateSettingsInputs(data.settings);
+            }
+          }).catch(e => console.warn('Could not fetch settings:', e));
+        }
       } else {
         modal.classList.add('hidden');
       }
@@ -885,7 +904,7 @@
       if (provider === 'edge_tts') {
         optEdge.className = "p-2 rounded border border-primary-container bg-surface-container text-left text-xs";
         optEdge.querySelector('.font-bold').className = "font-bold text-primary";
-        document.getElementById('meta-voice').textContent = "British Paul Bettany";
+        document.getElementById('meta-voice').textContent = "SARATHI (Edge Neural)";
       } else if (provider === 'sapi') {
         optSapi.className = "p-2 rounded border border-primary-container bg-surface-container text-left text-xs";
         optSapi.querySelector('.font-bold').className = "font-bold text-primary";
@@ -893,7 +912,8 @@
       } else {
         optEleven.className = "p-2 rounded border border-primary-container bg-surface-container text-left text-xs";
         optEleven.querySelector('.font-bold').className = "font-bold text-primary";
-        document.getElementById('meta-voice').textContent = "Personal Cloned";
+        const vId = document.getElementById('input-elevenlabs-voice-id')?.value.trim() || 'OOHcfRLzp0...';
+        document.getElementById('meta-voice').textContent = `SARATHI (ElevenLabs: ${vId.slice(0, 10)}...)`;
       }
     }
 
@@ -949,16 +969,53 @@
       setAssistantState("LISTENING");
     }
 
-    // Quick Action Handler
-    function runQuickAction(actionId) {
+    // Hide to Background Resident Mode
+    function hideToBackground() {
+      if (window.pywebview?.api) {
+        window.pywebview.api.close_window();
+      }
+    }
+
+    // Full Power Down / Exit
+    function confirmPowerOff() {
+      if (confirm("Are you sure you want to completely power down SARATHI and stop all background listening?")) {
+        if (window.pywebview?.api) {
+          window.pywebview.api.power_off();
+        }
+      }
+    }
+
+    // Quick Action Handler with instant debounce and responsive feedback
+    let isActionRunning = false;
+    function runQuickAction(actionId, btnEl) {
+      if (isActionRunning && actionId !== 'mute_mic') return;
+      isActionRunning = true;
+
+      if (btnEl) {
+        btnEl.classList.add('opacity-40', 'pointer-events-none');
+      }
+
       if (window.pywebview?.api) {
         window.pywebview.api.execute_quick_action(actionId).then(res => {
-          if (actionId === 'mute_mic' && res.muted !== undefined) {
+          isActionRunning = false;
+          if (btnEl) btnEl.classList.remove('opacity-40', 'pointer-events-none');
+
+          if (actionId === 'mute_mic' && res && res.muted !== undefined) {
             const btn = document.getElementById('quick-mic-mute-btn');
-            btn.querySelector('span:last-child').textContent = res.muted ? 'Unmute Mic' : 'Mute Mic';
-            document.getElementById('mic-status-display').textContent = res.muted ? 'MIC MUTED' : 'ARRAY_01 ACTIVE';
+            if (btn) btn.querySelector('span:last-child').textContent = res.muted ? 'Unmute Mic' : 'Mute Mic';
+            const micDisp = document.getElementById('mic-status-display');
+            if (micDisp) micDisp.textContent = res.muted ? 'MIC MUTED' : 'ARRAY_01 ACTIVE';
           }
+        }).catch(err => {
+          console.warn("Action execution error:", err);
+          isActionRunning = false;
+          if (btnEl) btnEl.classList.remove('opacity-40', 'pointer-events-none');
         });
+      } else {
+        setTimeout(() => {
+          isActionRunning = false;
+          if (btnEl) btnEl.classList.remove('opacity-40', 'pointer-events-none');
+        }, 500);
       }
     }
 
@@ -1084,7 +1141,7 @@
         statusPillDot.className = "w-2 h-2 rounded-full bg-error";
       } else {
         centerPillDot.className = "w-2 h-2 rounded-full bg-primary-container animate-pulse";
-        centerPillText.innerHTML = `ACTIVE: <span class="text-on-surface font-normal">Listening for "Hey Jarvis"...</span>`;
+        centerPillText.innerHTML = `ACTIVE: <span class="text-on-surface font-normal">Listening for "Hey Sarathi"...</span>`;
         statusPillText.textContent = "ACTIVE // LISTENING WAKE WORD";
         statusPillDot.className = "w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_#1fff9b]";
       }
@@ -1142,12 +1199,18 @@
       }
     };
 
-    // Global Python Event Dispatcher Hook
-    window.onJarvisEvent = function(eventName, data) {
+    // Global Python Event Dispatcher Hook for SARATHI
+    window.onSarathiEvent = function(eventName, data) {
       if (eventName === 'state_changed') {
         setAssistantState(data);
       } else if (eventName === 'user_speech') {
-        if (data && data.text) appendOperatorMessage(data.text);
+        if (data && data.text) {
+          const feed = document.getElementById('transcript-feed');
+          const lastMsg = feed.lastElementChild?.textContent || '';
+          if (!lastMsg.includes(data.text)) {
+            appendOperatorMessage(data.text);
+          }
+        }
       } else if (eventName === 'assistant_speech') {
         if (data && data.text) appendAssistantMessage(data.text, data.ttfa_ms);
       } else if (eventName === 'tool_executed') {
@@ -1156,6 +1219,8 @@
         setAssistantState("INTERRUPTED");
       }
     };
+    // Backward compatibility hook
+    window.onJarvisEvent = window.onSarathiEvent;
 
     // Voice sample file picker
     function browseVoiceSample() {
@@ -1187,20 +1252,67 @@
       }
     }
 
+    function populateSettingsInputs(cfg) {
+      if (!cfg) return;
+      if (cfg.llm_provider) selectEngine(cfg.llm_provider);
+      if (cfg.tts_provider) selectTtsProvider(cfg.tts_provider);
+
+      if (cfg.groq_api_key !== undefined) {
+        const el = document.getElementById('input-groq-key');
+        if (el) el.value = cfg.groq_api_key;
+      }
+      if (cfg.gemini_api_key !== undefined) {
+        const el = document.getElementById('input-gemini-key');
+        if (el) el.value = cfg.gemini_api_key;
+      }
+      if (cfg.elevenlabs_api_key !== undefined) {
+        const el = document.getElementById('input-elevenlabs-key');
+        if (el) el.value = cfg.elevenlabs_api_key;
+      }
+      if (cfg.cloned_voice_id) {
+        const elVoiceInput = document.getElementById('input-elevenlabs-voice-id');
+        if (elVoiceInput) elVoiceInput.value = cfg.cloned_voice_id;
+        if (cfg.tts_provider === 'elevenlabs') {
+          const mv = document.getElementById('meta-voice');
+          if (mv) mv.textContent = `SARATHI (ElevenLabs: ${cfg.cloned_voice_id.slice(0, 10)}...)`;
+        }
+      }
+    }
+
     function saveConfiguration() {
       const groqKey = document.getElementById('input-groq-key').value.trim();
       const geminiKey = document.getElementById('input-gemini-key').value.trim();
+      const elevenKey = document.getElementById('input-elevenlabs-key')?.value.trim() || '';
+      const elevenVoiceId = document.getElementById('input-elevenlabs-voice-id')?.value.trim() || '';
+
+      const saveBtn = document.querySelector('#modal-config button[onclick="saveConfiguration()"]');
+      const originalText = saveBtn ? saveBtn.innerHTML : 'Save & Apply';
+      if (saveBtn) saveBtn.innerHTML = '<span class="material-symbols-outlined text-[13px] animate-spin">sync</span> SAVING...';
 
       const payload = {
         groq_key: groqKey,
         gemini_key: geminiKey,
+        elevenlabs_key: elevenKey,
+        elevenlabs_voice_id: elevenVoiceId,
         llm_provider: currentSelectedEngine,
         tts_provider: currentSelectedTts
       };
 
       if (window.pywebview?.api) {
         window.pywebview.api.save_settings(payload).then(res => {
-          toggleConfigModal(false);
+          if (res && res.status === 'success') {
+            if (saveBtn) saveBtn.innerHTML = '<span class="material-symbols-outlined text-[13px]">check</span> SAVED!';
+            setTimeout(() => {
+              if (saveBtn) saveBtn.innerHTML = originalText;
+              toggleConfigModal(false);
+            }, 600);
+          } else {
+            alert('Failed to save settings: ' + (res?.message || 'Unknown error'));
+            if (saveBtn) saveBtn.innerHTML = originalText;
+          }
+        }).catch(err => {
+          alert('Error saving settings: ' + err);
+          if (saveBtn) saveBtn.innerHTML = originalText;
         });
       } else {
         toggleConfigModal(false);
@@ -1211,14 +1323,13 @@
     window.addEventListener('pywebviewready', () => {
       if (window.pywebview?.api) {
         window.pywebview.api.get_initial_data().then(data => {
-          if (data.settings) {
-            if (data.settings.llm_provider) selectEngine(data.settings.llm_provider);
-            if (data.settings.tts_provider) selectTtsProvider(data.settings.tts_provider);
+          if (data && data.settings) {
+            populateSettingsInputs(data.settings);
           }
-          if (data.telemetry) {
+          if (data && data.telemetry) {
             window.updateTelemetry(data.telemetry);
           }
-        });
+        }).catch(err => console.warn('Failed to load initial data:', err));
       }
     });
   </script>

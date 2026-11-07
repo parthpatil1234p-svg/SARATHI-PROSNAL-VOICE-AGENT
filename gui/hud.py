@@ -1,4 +1,4 @@
-"""J.A.R.V.I.S. Mark VII Tactical Desktop HUD - WebView2 / PyWebView Launcher."""
+"""S.A.R.A.T.H.I. Mark VII Tactical Desktop HUD - WebView2 / PyWebView Launcher."""
 
 import asyncio
 import json
@@ -12,12 +12,12 @@ import webview
 from config.settings import BASE_DIR, settings
 from core.event_bus import event_bus
 from core.orchestrator import AssistantOrchestrator
-from gui.web_bridge import JarvisWebBridge
+from gui.web_bridge import SarathiWebBridge
 
-logger = logging.getLogger("JARVIS.HUD")
+logger = logging.getLogger("SARATHI.HUD")
 
 
-class JarvisHUDApp:
+class SarathiHUDApp:
     """
     Main Desktop HUD Application runner.
     Hosts the Stitch-designed Mark VII Tactical Interface via Microsoft Edge WebView2,
@@ -26,7 +26,7 @@ class JarvisHUDApp:
 
     def __init__(self):
         self.orchestrator = AssistantOrchestrator()
-        self.bridge = JarvisWebBridge(self.orchestrator)
+        self.bridge = SarathiWebBridge(self.orchestrator)
         self.window = None
         self.loop: asyncio.AbstractEventLoop | None = None
         self.bg_thread: threading.Thread | None = None
@@ -38,13 +38,17 @@ class JarvisHUDApp:
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.bridge.set_loop(self.loop)
+        self.orchestrator.loop = self.loop
 
         # Wire event_bus to push live events to the WebView UI
         async def on_event(event_name: str, payload):
             if self.window and self.is_running:
                 try:
                     payload_json = json.dumps(payload, default=str)
-                    js_code = f"if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', {payload_json});"
+                    js_code = (
+                        f"if (window.onSarathiEvent) window.onSarathiEvent('{event_name}', {payload_json}); "
+                        f"else if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', {payload_json});"
+                    )
                     self.window.evaluate_js(js_code)
                 except Exception as e:
                     logger.debug(f"Event dispatch error for {event_name}: {e}")
@@ -54,15 +58,37 @@ class JarvisHUDApp:
         event_bus.subscribe("assistant_speech", lambda p: on_event("assistant_speech", p))
         event_bus.subscribe("tool_executed", lambda p: on_event("tool_executed", p))
         event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
+        event_bus.subscribe("wake_detected", lambda p: self._on_wake_detected())
 
         # Start continuous voice loop by default
-        self.bridge.is_voice_active = True
+        self.bridge._is_voice_active = True
         self.loop.create_task(self.orchestrator.start_voice_loop())
 
         try:
             self.loop.run_forever()
         finally:
             self.loop.close()
+
+    def _on_wake_detected(self):
+        """Restores and shows the tactical HUD window if hidden when Sarathi wakes up."""
+        if self.window and self.is_running:
+            try:
+                self.window.show()
+                self.window.restore()
+                logger.info("Tactical HUD window restored on wake detection.")
+            except Exception as e:
+                logger.debug(f"Window restore error: {e}")
+
+    def _on_window_closing(self):
+        """Intercepts window close to keep background listener running in laptop resident mode."""
+        if self.is_running and not getattr(self.bridge, "_is_quitting", False):
+            try:
+                self.window.hide()
+                logger.info("Window close intercepted -> SARATHI running in resident background mode.")
+                return False  # Cancels window destruction!
+            except Exception as e:
+                logger.debug(f"Hide on closing error: {e}")
+        return True
 
     def _telemetry_ticker(self):
         """Pushes system diagnostics and real-time audio levels to the HUD."""
@@ -72,7 +98,7 @@ class JarvisHUDApp:
             now = time.time()
             if self.window:
                 try:
-                    # 1. Audio Visualizer Level (~15Hz for snappy HUD responsiveness)
+                    # 1. Audio Visualizer Level (~33Hz for silky-smooth HUD responsiveness)
                     audio_level = getattr(self.orchestrator.audio_stream, "latest_level", 0)
                     if audio_level > 0:
                         js_audio = f"if (window.updateAudioLevel) window.updateAudioLevel({audio_level});"
@@ -89,7 +115,7 @@ class JarvisHUDApp:
                 except Exception:
                     pass
 
-            time.sleep(0.065)
+            time.sleep(0.03)
 
     def launch(self):
         """Launches the Mark VII Tactical HUD Window."""
@@ -117,6 +143,7 @@ class JarvisHUDApp:
             easy_drag=True
         )
         self.bridge.set_window(self.window)
+        self.window.events.closing += self._on_window_closing
 
         # Starts the native WebView2 message loop on the main thread (blocking until closed)
         webview.start(debug=False)
@@ -124,9 +151,13 @@ class JarvisHUDApp:
         self.orchestrator.stop()
 
 
+# Backward compatibility alias
+JarvisHUDApp = SarathiHUDApp
+
+
 def run_tactical_hud():
     """Entry point to launch the tactical desktop HUD."""
-    app = JarvisHUDApp()
+    app = SarathiHUDApp()
     app.launch()
 
 
