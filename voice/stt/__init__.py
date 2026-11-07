@@ -9,7 +9,9 @@ from voice.stt.whisper_stt import WhisperSTT
 def get_stt_engine(provider: str | None = None) -> BaseSTT:
     """Returns the configured STT engine."""
     provider = (provider or settings.STT_PROVIDER).lower()
-    if provider == "deepgram" and settings.DEEPGRAM_API_KEY:
+    dg_key = (settings.DEEPGRAM_API_KEY or "").strip()
+    is_placeholder = any(p in dg_key.lower() for p in ("your-", "placeholder", "key-here", "xxx"))
+    if provider == "deepgram" and dg_key and not is_placeholder:
         return DeepgramSTT()
     return WhisperSTT()
 

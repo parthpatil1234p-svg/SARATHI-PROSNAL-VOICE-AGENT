@@ -141,8 +141,7 @@ class AssistantOrchestrator:
                         in_dialogue_window = time.time() < self.active_conversation_timeout
                         if in_dialogue_window and self.vad.is_speech(chunk):
                             self.state_machine.transition_to(AssistantState.LISTENING)
-                            self.vad.speech_started = True
-                            self.vad.accumulated_speech_chunks.append(chunk)
+                            self.vad.start_speech(chunk)
                             continue
 
                         # Fast-path B: OpenWakeWord acoustic model trigger
@@ -407,6 +406,25 @@ class AssistantOrchestrator:
             self.memory.add_user_message(user_text)
             await event_bus.publish("user_speech", {"text": user_text, "latency_ms": 0})
 
+            # Check for rule/intent fast path (bypasses LLM for deterministic queries)
+            if settings.ENABLE_RULE_FAST_PATH:
+                from core.fast_path import check_fast_path
+                fp = check_fast_path(user_text)
+                if fp.matched:
+                    if audio_started_event:
+                        audio_started_event.set()
+                    tracker.mark_llm_first_token()
+                    tracker.mark_first_clause_ready(fp.spoken_text)
+                    await self.speak_direct(
+                        text=fp.spoken_text,
+                        tool_name=fp.tool_name,
+                        tool_result=fp.tool_result,
+                        tracker=tracker,
+                        audio_started_event=audio_started_event
+                    )
+                    self.state_machine.transition_to(AssistantState.IDLE)
+                    return
+
             console.print(f"[bold cyan]{settings.ASSISTANT_NAME}:[/bold cyan] ", end="")
 
             async def tracked_token_stream():
@@ -434,7 +452,17 @@ class AssistantOrchestrator:
                     async for sentence in sentence_stream:
                         if self.state_machine.current_state == AssistantState.INTERRUPTED:
                             break
-                        audio_bytes = await self.tts.synthesize(sentence)
+                        try:
+                            audio_bytes = await self.tts.synthesize(sentence)
+                        except Exception as tts_err:
+                            logger.warning(f"TTS synthesis failed ({tts_err}), falling back to local SAPI...")
+                            try:
+                                from voice.tts.sapi_tts import SapiTTSClient
+                                sapi = SapiTTSClient()
+                                audio_bytes = await sapi.synthesize(sentence)
+                            except Exception as sapi_err:
+                                logger.error(f"SAPI fallback error: {sapi_err}")
+                                audio_bytes = b""
                         if first_synth and tracker:
                             tracker.mark_tts_first_audio()
                             first_synth = False
@@ -547,7 +575,17 @@ class AssistantOrchestrator:
             })
 
         self.state_machine.transition_to(AssistantState.SPEAKING)
-        audio_bytes = await self.tts.synthesize(text)
+        try:
+            audio_bytes = await self.tts.synthesize(text)
+        except Exception as tts_err:
+            logger.warning(f"Direct TTS synthesis failed ({tts_err}), falling back to local SAPI...")
+            try:
+                from voice.tts.sapi_tts import SapiTTSClient
+                sapi = SapiTTSClient()
+                audio_bytes = await sapi.synthesize(text)
+            except Exception as sapi_err:
+                logger.error(f"SAPI direct fallback error: {sapi_err}")
+                audio_bytes = b""
         if tracker:
             tracker.mark_tts_first_audio()
 

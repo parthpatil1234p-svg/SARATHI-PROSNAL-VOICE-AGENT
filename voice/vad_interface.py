@@ -41,3 +41,7 @@ class BaseVAD(ABC):
     def reset(self) -> None:
         """Resets internal state, accumulator buffers, and speech timestamps."""
         pass
+
+    def start_speech(self, chunk: np.ndarray | None = None) -> None:
+        """Forces speech_started state and appends optional initial chunk."""
+        pass

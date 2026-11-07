@@ -43,5 +43,11 @@ class DeepgramSTT(BaseSTT):
                 )
                 return transcript.strip()
         except Exception as e:
-            logger.error(f"Deepgram transcription error: {e}")
-            return ""
+            logger.error(f"Deepgram transcription error: {e}. Falling back to Whisper STT.")
+            try:
+                from voice.stt.whisper_stt import WhisperSTT
+                fallback = WhisperSTT()
+                return await fallback.transcribe(audio_bytes, sample_rate)
+            except Exception as fe:
+                logger.error(f"STT fallback error: {fe}")
+                return ""

@@ -124,6 +124,13 @@ class RMSVAD(BaseVAD):
         self.consecutive_speech_frames = 0
         self.accumulated_speech_chunks.clear()
 
+    def start_speech(self, chunk: np.ndarray | None = None):
+        self.speech_started = True
+        self.last_speech_time = time.time()
+        self.consecutive_speech_frames = self.min_consecutive_frames
+        if chunk is not None:
+            self.accumulated_speech_chunks.append(chunk)
+
 
 class SileroVAD(BaseVAD):
     """
@@ -320,6 +327,14 @@ class SileroVAD(BaseVAD):
         self.h.fill(0)
         self.c.fill(0)
 
+    def start_speech(self, chunk: np.ndarray | None = None):
+        self.speech_started = True
+        self.last_speech_time = time.time()
+        self.consecutive_speech_frames = self.min_consecutive_frames
+        if chunk is not None:
+            pcm_int16 = chunk if chunk.dtype == np.int16 else (chunk * 32767).astype(np.int16)
+            self.accumulated_chunks.append(pcm_int16)
+
 
 class VoiceActivityDetector(BaseVAD):
     """
@@ -385,6 +400,12 @@ class VoiceActivityDetector(BaseVAD):
 
     def reset(self):
         self._engine.reset()
+
+    def start_speech(self, chunk: np.ndarray | None = None):
+        if hasattr(self._engine, "start_speech"):
+            self._engine.start_speech(chunk)
+        else:
+            self._engine.speech_started = True
 
 
 __all__ = ["BaseVAD", "RMSVAD", "SileroVAD", "VoiceActivityDetector"]

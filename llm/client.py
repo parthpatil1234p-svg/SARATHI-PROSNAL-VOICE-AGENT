@@ -133,8 +133,11 @@ class LLMClient:
             extra_kwargs = {}
             if "gpt-oss" in self.model.lower() or "reasoning" in self.model.lower():
                 extra_kwargs["reasoning_effort"] = settings.GROQ_REASONING_EFFORT
-
-            max_tokens = 120 if settings.ENABLE_LLM_LOW_LATENCY else 300
+                # Reasoning models spend 40-100 tokens internally before producing content.
+                # A cap of 120 causes them to exhaust their token budget on reasoning alone, returning empty content.
+                max_tokens = 350
+            else:
+                max_tokens = 150 if settings.ENABLE_LLM_LOW_LATENCY else 300
 
             stream = await self._groq_client.chat.completions.create(
                 model=self.model,
@@ -202,6 +205,10 @@ class LLMClient:
             else:
                 if current_assistant_content:
                     memory.add_assistant_message(current_assistant_content)
+                else:
+                    fallback_text = "I am listening, sir. How may I assist you?"
+                    memory.add_assistant_message(fallback_text)
+                    yield fallback_text
 
         except Exception as e:
             logger.error(f"Groq streaming error: {e}", exc_info=True)

@@ -60,18 +60,18 @@ class SarathiWebBridge:
         """Toggles maximize/restore state."""
         if self._window:
             try:
-                self._window.toggle_fullscreen()
+                if getattr(self, "_is_maximized", False):
+                    self._window.restore()
+                    self._is_maximized = False
+                else:
+                    self._window.maximize()
+                    self._is_maximized = True
             except Exception as e:
-                logger.warning(f"Window toggle fullscreen error: {e}")
+                logger.warning(f"Window maximize/restore error: {e}")
 
     def close_window(self):
-        """Hides the HUD window to background resident mode so 'Hey Sarathi' keeps listening."""
-        if self._window:
-            try:
-                self._window.hide()
-                logger.info("HUD hidden to background. Sarathi continues listening in background for 'Hey Sarathi'.")
-            except Exception as e:
-                logger.warning(f"Window hide error: {e}")
+        """Closes the HUD window cleanly."""
+        self.power_off()
 
     def power_off(self):
         """Fully terminates the application and background listener."""

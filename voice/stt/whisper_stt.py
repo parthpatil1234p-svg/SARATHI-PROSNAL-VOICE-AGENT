@@ -140,27 +140,39 @@ class WhisperSTT(BaseSTT):
             import ctranslate2
             from faster_whisper import WhisperModel
             if self._local_model is None:
-                device = "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
-                compute_type = "float16" if device == "cuda" else "int8"
+                use_cuda = False
+                if ctranslate2.get_cuda_device_count() > 0:
+                    try:
+                        import ctypes
+                        ctypes.cdll.LoadLibrary("cublas64_12.dll")
+                        use_cuda = True
+                    except Exception:
+                        logger.info("cuBLAS 12 DLL not present on system; defaulting faster-whisper to CPU int8")
+                        use_cuda = False
+
+                device = "cuda" if use_cuda else "cpu"
+                compute_type = "float16" if use_cuda else "int8"
                 logger.info(f"Loading local faster-whisper model '{self.model_size}' on {device} ({compute_type})...")
-                try:
-                    self._local_model = WhisperModel(
-                        self.model_size,
-                        device=device,
-                        compute_type=compute_type
-                    )
-                except Exception as load_err:
-                    logger.warning(f"Failed to load faster-whisper on {device}: {load_err}, falling back to CPU int8")
-                    self._local_model = WhisperModel(
-                        self.model_size,
-                        device="cpu",
-                        compute_type="int8"
-                    )
+                self._local_model = WhisperModel(
+                    self.model_size,
+                    device=device,
+                    compute_type=compute_type
+                )
 
             wav_file = self._get_wav_bytes(audio_bytes, sample_rate)
-            # Run local CPU/GPU transcription in worker thread to prevent event loop stutter
-            segments, _ = await asyncio.to_thread(self._local_model.transcribe, wav_file, beam_size=1)
-            text = " ".join([seg.text for seg in segments]).strip()
+
+            def _transcribe_sync(model, f):
+                segs, _ = model.transcribe(f, beam_size=1)
+                return " ".join([seg.text for seg in segs]).strip()
+
+            try:
+                text = await asyncio.to_thread(_transcribe_sync, self._local_model, wav_file)
+            except Exception as infer_err:
+                logger.warning(f"Local faster-whisper inference failed ({infer_err}), retrying on CPU int8 fallback...")
+                self._local_model = WhisperModel(self.model_size, device="cpu", compute_type="int8")
+                wav_file.seek(0)
+                text = await asyncio.to_thread(_transcribe_sync, self._local_model, wav_file)
+
             logger.info(f"Local Whisper transcription: '{text}'")
             return text
         except Exception as e:

@@ -80,14 +80,13 @@ class SarathiHUDApp:
                 logger.debug(f"Window restore error: {e}")
 
     def _on_window_closing(self):
-        """Intercepts window close to keep background listener running in laptop resident mode."""
-        if self.is_running and not getattr(self.bridge, "_is_quitting", False):
-            try:
-                self.window.hide()
-                logger.info("Window close intercepted -> SARATHI running in resident background mode.")
-                return False  # Cancels window destruction!
-            except Exception as e:
-                logger.debug(f"Hide on closing error: {e}")
+        """Handles clean application shutdown when the window close button is pressed."""
+        self.is_running = False
+        try:
+            self.orchestrator.stop()
+            logger.info("SARATHI HUD closed cleanly.")
+        except Exception as e:
+            logger.debug(f"Shutdown error on closing: {e}")
         return True
 
     def _telemetry_ticker(self):

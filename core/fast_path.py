@@ -15,6 +15,7 @@ import time
 from datetime import datetime
 from typing import Any
 
+from config.settings import settings
 from tools.os_tools import mute_system, open_application, set_system_volume
 from tools.system_tools import get_system_diagnostics
 
@@ -115,5 +116,38 @@ def check_fast_path(user_text: str) -> FastPathResult:
             pass
 
         return FastPathResult(True, spoken, "set_timer", {"seconds": total_seconds})
+
+    # 6. Greetings & Instant Pleasantries (<5ms response)
+    if cleaned in ("hi", "hello", "hey", "hii", "heyy", "namaste", "hey sarathi", "hi sarathi", "hello sarathi"):
+        user_name = getattr(settings, "USER_NAME", "Sir")
+        asst_name = getattr(settings, "ASSISTANT_NAME", "SARATHI")
+        spoken = f"Hello {user_name}! {asst_name} is online and operational. How can I assist you today?"
+        return FastPathResult(True, spoken, "greeting", {"status": "ready"})
+
+    if any(q in cleaned for q in ("good morning", "shubh prabhat")):
+        user_name = getattr(settings, "USER_NAME", "Sir")
+        spoken = f"Good morning, {user_name}. All systems are nominal. Standing by for your command."
+        return FastPathResult(True, spoken, "greeting_morning", {})
+
+    if any(q in cleaned for q in ("good evening", "good afternoon")):
+        user_name = getattr(settings, "USER_NAME", "Sir")
+        spoken = f"Good day, {user_name}. How can I assist you?"
+        return FastPathResult(True, spoken, "greeting_day", {})
+
+    # 7. Identity & Personal Questions (Instant <10ms response)
+    if any(q in cleaned for q in ("what is my name", "what's my name", "who am i", "do you know my name", "tell me my name", "mera naam kya hai")):
+        user_name = getattr(settings, "USER_NAME", "Sir")
+        spoken = f"Your name is set as {user_name}, sir."
+        return FastPathResult(True, spoken, "user_identity", {"user_name": user_name})
+
+    if any(q in cleaned for q in ("what is your name", "what's your name", "who are you", "what should i call you", "tell me your name", "tum kaun ho")):
+        asst_name = getattr(settings, "ASSISTANT_NAME", "SARATHI")
+        spoken = f"I am {asst_name}, your personal desktop AI voice assistant, sir."
+        return FastPathResult(True, spoken, "assistant_identity", {"assistant_name": asst_name})
+
+    if any(q in cleaned for q in ("how are you", "how are you doing", "how r u", "kaisa hai", "kaise ho")):
+        asst_name = getattr(settings, "ASSISTANT_NAME", "SARATHI")
+        spoken = f"All systems are operational and running at peak performance, sir. How can I assist you?"
+        return FastPathResult(True, spoken, "assistant_status", {"status": "nominal"})
 
     return FastPathResult(False)

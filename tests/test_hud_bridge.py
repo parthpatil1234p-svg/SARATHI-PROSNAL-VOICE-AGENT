@@ -54,6 +54,13 @@ def test_bridge_save_settings_persistence(bridge, tmp_path, monkeypatch):
     test_env.write_text('DEFAULT_LLM_PROVIDER="groq"\nASSISTANT_NAME="SARATHI"\n', encoding="utf-8")
 
     from config.settings import settings
+    orig_groq = settings.GROQ_API_KEY
+    orig_gemini = settings.GEMINI_API_KEY
+    orig_el_key = settings.ELEVENLABS_API_KEY
+    orig_el_vid = settings.ELEVENLABS_VOICE_ID
+    orig_llm = settings.DEFAULT_LLM_PROVIDER
+    orig_tts = settings.TTS_PROVIDER
+
     monkeypatch.setattr("gui.web_bridge.EXE_DIR", tmp_path)
     monkeypatch.setattr("gui.web_bridge.BASE_DIR", tmp_path)
 
@@ -89,3 +96,11 @@ def test_bridge_save_settings_persistence(bridge, tmp_path, monkeypatch):
     assert 'GROQ_API_KEY="gsk_test_mock_12345"' in saved_content
     assert 'GEMINI_API_KEY="AIza_mock_67890"' in saved_content
     assert 'DEFAULT_LLM_PROVIDER="gemini"' in saved_content
+
+    # Restore original settings
+    settings.GROQ_API_KEY = orig_groq
+    settings.GEMINI_API_KEY = orig_gemini
+    settings.ELEVENLABS_API_KEY = orig_el_key
+    settings.ELEVENLABS_VOICE_ID = orig_el_vid
+    settings.DEFAULT_LLM_PROVIDER = orig_llm
+    settings.TTS_PROVIDER = orig_tts

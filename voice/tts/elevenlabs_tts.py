@@ -49,10 +49,20 @@ class ElevenLabsTTSClient(BaseTTS):
             }
         }
 
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json=payload, headers=headers)
-            resp.raise_for_status()
-            return resp.content
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(url, json=payload, headers=headers)
+                resp.raise_for_status()
+                return resp.content
+        except Exception as e:
+            logger.warning(f"ElevenLabs TTS synthesis failed ({e}), falling back to local SAPI...")
+            try:
+                from voice.tts.sapi_tts import SapiTTSClient
+                sapi = SapiTTSClient()
+                return await sapi.synthesize(text)
+            except Exception as se:
+                logger.error(f"SAPI fallback failed: {se}")
+                raise e
 
     async def stream_audio_chunks(self, text: str) -> AsyncGenerator[bytes, None]:
         """Streams raw MP3 chunks directly from the ElevenLabs HTTP stream."""
