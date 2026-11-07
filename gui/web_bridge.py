@@ -45,6 +45,20 @@ class SarathiWebBridge:
         """Sets the pywebview window instance."""
         self._window = window
 
+    def get_conversation_history(self) -> list[dict[str, Any]]:
+        """Returns chronological conversation history from orchestrator memory."""
+        res: list[dict[str, Any]] = []
+        if hasattr(self._orchestrator, "memory") and self._orchestrator.memory:
+            for m in self._orchestrator.memory.get_messages():
+                role = m.get("role", "")
+                if role != "system":
+                    res.append({
+                        "role": role,
+                        "content": m.get("content", ""),
+                        "time": time.strftime("%H:%M:%S")
+                    })
+        return res
+
     # -------------------------------------------------------------
     # Window Controls (Minimize, Maximize, Hide to Background, Power Off)
     # -------------------------------------------------------------

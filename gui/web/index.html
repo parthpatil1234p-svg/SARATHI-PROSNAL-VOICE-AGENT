@@ -130,6 +130,10 @@
       <nav class="flex items-center gap-1 bg-surface-container px-1 py-0.5 rounded border border-surface-container-highest/50 font-telemetry text-[11px] uppercase">
         <button class="px-2.5 py-1 rounded transition-colors bg-primary-container text-on-primary-container font-semibold" id="nav-btn-cockpit" onclick="switchView('cockpit')">Cockpit</button>
         <button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors" id="nav-btn-barge" onclick="switchView('barge')">Barge-In Mode</button>
+        <button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1" id="nav-btn-logs" onclick="switchView('logs')">
+          <span class="material-symbols-outlined text-[13px]">forum</span>
+          <span>Conversation Log</span>
+        </button>
         <button class="px-2.5 py-1 rounded text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1" id="nav-btn-config" onclick="toggleConfigModal(true)">
           <span class="material-symbols-outlined text-[13px]">tune</span>
           <span>Voice Studio</span>
@@ -604,6 +608,64 @@
   </main>
 
   <!-- ========================================================================= -->
+  <!-- CONVERSATION AUDIT & SPEECH LOG VIEW (#view-logs)                         -->
+  <!-- ========================================================================= -->
+  <main class="hidden flex-1 flex-col p-3 gap-3 overflow-hidden z-10" id="view-logs">
+    <div class="relative w-full h-full rounded-lg bg-surface-container-low/90 backdrop-blur-xl p-4 border border-surface-container-highest shadow-2xl flex flex-col overflow-hidden">
+      <!-- Top Audit Header & Filter Toolbar -->
+      <div class="flex items-center justify-between pb-3 border-b border-surface-container-highest/80 flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-primary-container/15 border border-primary-container/40">
+            <span class="material-symbols-outlined text-[16px] text-primary-container">forum</span>
+            <span class="font-headline text-xs font-bold uppercase tracking-wider text-primary">CONVERSATION AUDIT LOG</span>
+          </div>
+          <span class="text-outline font-telemetry text-xs">|</span>
+          <span class="font-telemetry text-xs text-on-surface-variant font-medium" id="logs-counter">0 ENTRIES RECORDED</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Filter Buttons -->
+          <div class="flex items-center bg-surface-container rounded p-0.5 border border-surface-container-highest font-telemetry text-[11px]">
+            <button class="px-2.5 py-0.5 rounded bg-primary-container text-on-primary-container font-semibold transition-all" id="filter-btn-all" onclick="filterLogs('all')">ALL</button>
+            <button class="px-2.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-all" id="filter-btn-user" onclick="filterLogs('user')">OPERATOR</button>
+            <button class="px-2.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-all" id="filter-btn-assistant" onclick="filterLogs('assistant')">SARATHI AI</button>
+            <button class="px-2.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-all" id="filter-btn-tools" onclick="filterLogs('tool')">TOOLS</button>
+          </div>
+
+          <!-- Clear Logs -->
+          <button class="h-7 px-2.5 flex items-center gap-1 bg-surface-container hover:bg-surface-bright text-on-surface-variant hover:text-error text-[11px] font-telemetry uppercase rounded border border-outline-variant/30 transition-colors" onclick="clearConversationLogs()" title="Clear Log Feed" type="button">
+            <span class="material-symbols-outlined text-[14px]">delete_sweep</span>
+            <span>Clear</span>
+          </button>
+
+          <!-- Copy All -->
+          <button class="h-7 px-2.5 flex items-center gap-1 bg-surface-container hover:bg-surface-bright text-on-surface-variant hover:text-primary text-[11px] font-telemetry uppercase rounded border border-outline-variant/30 transition-colors" id="btn-copy-logs" onclick="copyConversationLogs()" title="Copy entire log to clipboard" type="button">
+            <span class="material-symbols-outlined text-[14px]">content_copy</span>
+            <span>Copy</span>
+          </button>
+
+          <!-- Return to Cockpit -->
+          <button class="h-7 px-2.5 flex items-center gap-1 bg-surface-container hover:bg-surface-bright text-primary text-[11px] font-telemetry uppercase rounded border border-outline-variant/30 transition-colors" onclick="switchView('cockpit')" type="button">
+            <span class="material-symbols-outlined text-[14px]">dashboard</span>
+            <span>Cockpit</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Logs Feed (Scrollable) -->
+      <div class="flex-1 overflow-y-auto space-y-2.5 pr-1 mt-3 font-telemetry" id="conversation-log-feed">
+        <!-- Default Empty State Notice -->
+        <div class="flex flex-col items-center justify-center h-full text-center text-on-surface-variant opacity-60" id="empty-logs-placeholder">
+          <span class="material-symbols-outlined text-4xl mb-2 text-outline">forum</span>
+          <p class="font-headline text-sm uppercase tracking-wider">Awaiting Speech or Command Input...</p>
+          <p class="text-xs text-outline mt-1 font-telemetry">Every spoken prompt and assistant response is tracked here in real-time with latency metrics.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ========================================================================= -->
   <!-- CONFIGURATION & VOICE STUDIO MODAL (#modal-config)                       -->
   <!-- ========================================================================= -->
   <div class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-surface-container-lowest/85" id="modal-config">
@@ -807,24 +869,171 @@
     let isVoiceEngaged = true;
 
     // View switcher
+    const logEntries = [];
+    let currentLogFilter = 'all';
+
     function switchView(viewName) {
       const cockpit = document.getElementById('view-cockpit');
       const barge = document.getElementById('view-barge');
+      const logs = document.getElementById('view-logs');
       const btnCockpit = document.getElementById('nav-btn-cockpit');
       const btnBarge = document.getElementById('nav-btn-barge');
+      const btnLogs = document.getElementById('nav-btn-logs');
+
+      cockpit.classList.add('hidden');
+      barge.classList.add('hidden');
+      if (logs) {
+        logs.classList.add('hidden');
+        logs.classList.remove('flex');
+      }
+      barge.classList.remove('flex');
+
+      const inactiveClass = "px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1";
+      const activeClass = "px-2.5 py-1 rounded transition-colors bg-primary-container text-on-primary-container font-semibold flex items-center gap-1";
+
+      btnCockpit.className = inactiveClass;
+      btnBarge.className = inactiveClass;
+      if (btnLogs) btnLogs.className = inactiveClass;
 
       if (viewName === 'cockpit') {
         cockpit.classList.remove('hidden');
-        barge.classList.add('hidden');
-        btnCockpit.className = "px-2.5 py-1 rounded transition-colors bg-primary-container text-on-primary-container font-semibold";
-        btnBarge.className = "px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors";
-      } else {
-        cockpit.classList.add('hidden');
+        btnCockpit.className = activeClass;
+      } else if (viewName === 'barge') {
         barge.classList.remove('hidden');
         barge.classList.add('flex');
-        btnBarge.className = "px-2.5 py-1 rounded transition-colors bg-primary-container text-on-primary-container font-semibold";
-        btnCockpit.className = "px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors";
+        btnBarge.className = activeClass;
+      } else if (viewName === 'logs' && logs) {
+        logs.classList.remove('hidden');
+        logs.classList.add('flex');
+        if (btnLogs) btnLogs.className = activeClass;
       }
+    }
+
+    function addConversationLogEntry(entry) {
+      logEntries.push(entry);
+      renderLogEntry(entry);
+      updateLogCounter();
+    }
+
+    function renderLogEntry(entry) {
+      const feed = document.getElementById('conversation-log-feed');
+      const placeholder = document.getElementById('empty-logs-placeholder');
+      if (placeholder) placeholder.style.display = 'none';
+
+      let borderClass = 'border-surface-container-highest';
+      let titleClass = 'text-primary';
+      let icon = 'chat_bubble';
+      let roleLabel = 'OPERATOR // INPUT';
+      let tagBadge = entry.badge || 'INPUT';
+
+      if (entry.type === 'assistant') {
+        borderClass = 'border-primary/40 bg-surface-container-high/90';
+        titleClass = 'text-primary font-bold';
+        icon = 'smart_toy';
+        roleLabel = 'SARATHI // AI REPLY';
+      } else if (entry.type === 'tool') {
+        borderClass = 'border-secondary-container/40 bg-surface-container-highest/60';
+        titleClass = 'text-secondary-fixed-dim font-bold';
+        icon = 'terminal';
+        roleLabel = 'SYSTEM // SUBROUTINE EXECUTION';
+      } else {
+        borderClass = 'border-outline-variant/40 bg-surface-container/80';
+        titleClass = 'text-on-surface font-bold';
+        icon = 'record_voice_over';
+        roleLabel = 'OPERATOR // SIR';
+      }
+
+      const isHidden = (currentLogFilter !== 'all' && currentLogFilter !== entry.type) ? 'style="display:none;"' : '';
+      const latencyStr = entry.latency ? `<span class="bg-surface-container-lowest px-2 py-0.5 rounded border border-outline-variant/30 text-secondary-fixed-dim">${entry.latency}ms</span>` : '';
+
+      const html = `
+        <div class="log-item p-3.5 rounded-lg border ${borderClass} shadow-md transition-all animate-fadeIn" data-type="${entry.type}" ${isHidden}>
+          <div class="flex items-center justify-between pb-1.5 border-b border-surface-container-highest/40 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-[15px] ${titleClass}">${icon}</span>
+              <span class="font-headline text-xs ${titleClass} uppercase tracking-wider">${roleLabel}</span>
+              <span class="font-label text-[9px] px-1.5 py-0.5 rounded bg-surface-container-highest/70 text-outline uppercase">${tagBadge}</span>
+            </div>
+            <div class="flex items-center gap-2 text-[10px] text-outline font-telemetry">
+              ${latencyStr}
+              <span>${entry.time || new Date().toTimeString().substr(0, 8)}</span>
+            </div>
+          </div>
+          <div class="font-headline text-xs leading-relaxed text-on-surface">
+            ${entry.type === 'tool' ? `<pre class="bg-surface-container-lowest/90 p-2 rounded text-[11px] text-primary overflow-x-auto whitespace-pre-wrap">${entry.text}</pre>` : `"${entry.text}"`}
+          </div>
+        </div>
+      `;
+
+      feed.insertAdjacentHTML('beforeend', html);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function filterLogs(filterType) {
+      currentLogFilter = filterType;
+      const buttons = {
+        all: document.getElementById('filter-btn-all'),
+        user: document.getElementById('filter-btn-user'),
+        assistant: document.getElementById('filter-btn-assistant'),
+        tool: document.getElementById('filter-btn-tools')
+      };
+
+      for (const k in buttons) {
+        if (!buttons[k]) continue;
+        if (k === filterType) {
+          buttons[k].className = "px-2.5 py-0.5 rounded bg-primary-container text-on-primary-container font-semibold transition-all";
+        } else {
+          buttons[k].className = "px-2.5 py-0.5 rounded text-on-surface-variant hover:text-on-surface transition-all";
+        }
+      }
+
+      const items = document.querySelectorAll('#conversation-log-feed .log-item');
+      items.forEach(el => {
+        if (filterType === 'all' || el.getAttribute('data-type') === filterType) {
+          el.style.display = 'block';
+        } else {
+          el.style.display = 'none';
+        }
+      });
+    }
+
+    function clearConversationLogs() {
+      logEntries.length = 0;
+      const feed = document.getElementById('conversation-log-feed');
+      feed.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-center text-on-surface-variant opacity-60" id="empty-logs-placeholder">
+          <span class="material-symbols-outlined text-4xl mb-2 text-outline">forum</span>
+          <p class="font-headline text-sm uppercase tracking-wider">Awaiting Speech or Command Input...</p>
+          <p class="text-xs text-outline mt-1 font-telemetry">Log feed cleared.</p>
+        </div>
+      `;
+      updateLogCounter();
+    }
+
+    function copyConversationLogs() {
+      if (!logEntries.length) {
+        alert("Log feed is currently empty, sir.");
+        return;
+      }
+      let textToCopy = "=== SARATHI CONVERSATION AUDIT LOG ===\n\n";
+      logEntries.forEach(e => {
+        const who = e.type === 'user' ? 'OPERATOR' : (e.type === 'assistant' ? 'SARATHI AI' : 'TOOL');
+        const lat = e.latency ? ` [${e.latency}ms]` : '';
+        textToCopy += `[${e.time || ''}] ${who}${lat}:\n${e.text}\n\n`;
+      });
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const btn = document.getElementById('btn-copy-logs');
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<span class="material-symbols-outlined text-[14px]">done</span><span>Copied!</span>';
+          setTimeout(() => btn.innerHTML = orig, 1500);
+        }
+      });
+    }
+
+    function updateLogCounter() {
+      const el = document.getElementById('logs-counter');
+      if (el) el.textContent = `${logEntries.length} ENTRIES RECORDED`;
     }
 
     // Modal switcher
@@ -1054,6 +1263,7 @@
       `;
       feed.insertAdjacentHTML('beforeend', html);
       feed.scrollTop = feed.scrollHeight;
+      addConversationLogEntry({ type: 'user', text: text, time: now, badge: 'USER PROMPT' });
     }
 
     function appendToolCallMessage(toolName, args, result, latency) {
@@ -1076,6 +1286,7 @@
       `;
       feed.insertAdjacentHTML('beforeend', html);
       feed.scrollTop = feed.scrollHeight;
+      addConversationLogEntry({ type: 'tool', text: `[${toolName}]: ${resultStr}`, time: new Date().toTimeString().substr(0, 8), latency: latency, badge: 'TOOL EXEC' });
     }
 
     function appendAssistantMessage(text, ttfa) {
@@ -1104,6 +1315,7 @@
       `;
       feed.insertAdjacentHTML('beforeend', html);
       feed.scrollTop = feed.scrollHeight;
+      addConversationLogEntry({ type: 'assistant', text: text, time: now, latency: ttfa, badge: 'AI RESPONSE' });
 
       // Also update Barge-in screen speech buffer text
       const bargeSpeech = document.getElementById('barge-speech-text');
