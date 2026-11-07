@@ -67,6 +67,11 @@ hidden_imports = [
     "asyncio",
     "threading",
     "queue",
+    "pythoncom",
+    "win32com",
+    "win32com.client",
+    "faster_whisper",
+    "ctranslate2",
 ]
 
 # Add any additional submodules

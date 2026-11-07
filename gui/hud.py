@@ -44,10 +44,14 @@ class SarathiHUDApp:
         async def on_event(event_name: str, payload):
             if self.window and self.is_running:
                 try:
-                    payload_json = json.dumps(payload, default=str)
+                    payload_raw_json = json.dumps(payload, default=str)
+                    encoded_arg = json.dumps(payload_raw_json)
                     js_code = (
-                        f"if (window.onSarathiEvent) window.onSarathiEvent('{event_name}', {payload_json}); "
-                        f"else if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', {payload_json});"
+                        f"try {{ "
+                        f"  var data = JSON.parse({encoded_arg}); "
+                        f"  if (window.onSarathiEvent) window.onSarathiEvent('{event_name}', data); "
+                        f"  else if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', data); "
+                        f"}} catch(e) {{ console.error('dispatch error for {event_name}:', e); }}"
                     )
                     self.window.evaluate_js(js_code)
                 except Exception as e:

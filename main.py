@@ -16,16 +16,24 @@ if sys.platform == "win32":
 from rich.console import Console
 from rich.panel import Panel
 
-from config.settings import settings
+from config.settings import EXE_DIR, settings
 from core.orchestrator import AssistantOrchestrator
 from tools.registry import get_all_tool_schemas
 from voice.audio_stream import AudioInputStream
 
-# Configure logging
+# Configure logging (both console and persistent file in application directory)
+log_handlers: list[logging.Handler] = [logging.StreamHandler(sys.stdout)]
+try:
+    log_file = EXE_DIR / "sarathi.log"
+    log_handlers.append(logging.FileHandler(str(log_file), mode="a", encoding="utf-8"))
+except Exception:
+    pass
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-    datefmt="%H:%M:%S"
+    datefmt="%H:%M:%S",
+    handlers=log_handlers
 )
 # Silence chatty external libraries
 logging.getLogger("httpx").setLevel(logging.WARNING)

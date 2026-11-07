@@ -42,6 +42,7 @@ class RMSVAD(BaseVAD):
 
         # State tracking for continuous speech turns
         self.speech_started = False
+        self.speech_start_time = 0.0
         self.last_speech_time = 0.0
         self.consecutive_speech_frames = 0
         self.min_consecutive_frames = 2  # Require at least 2 frames (~160ms) of sustained voice
@@ -78,6 +79,7 @@ class RMSVAD(BaseVAD):
             if not self.speech_started:
                 if self.consecutive_speech_frames >= self.min_consecutive_frames:
                     self.speech_started = True
+                    self.speech_start_time = current_time
                     logger.debug("RMS VAD confirmed speech start.")
             if self.speech_started:
                 self.last_speech_time = current_time
@@ -120,12 +122,14 @@ class RMSVAD(BaseVAD):
 
     def reset(self):
         self.speech_started = False
+        self.speech_start_time = 0.0
         self.last_speech_time = 0.0
         self.consecutive_speech_frames = 0
         self.accumulated_speech_chunks.clear()
 
     def start_speech(self, chunk: np.ndarray | None = None):
         self.speech_started = True
+        self.speech_start_time = time.time()
         self.last_speech_time = time.time()
         self.consecutive_speech_frames = self.min_consecutive_frames
         if chunk is not None:
@@ -146,7 +150,7 @@ class SileroVAD(BaseVAD):
         self,
         model_path: Path | str | None = None,
         silence_timeout_ms: int | None = None,
-        speech_threshold: float = 0.35,
+        speech_threshold: float = 0.18,
         preroll_ms: int = 200,
         min_speech_duration_sec: float = 0.20,
         sample_rate: int = 16000
@@ -179,6 +183,7 @@ class SileroVAD(BaseVAD):
 
         # State tracking
         self.speech_started = False
+        self.speech_start_time = 0.0
         self.last_speech_time = 0.0
         self._saved_last_voice_time = 0.0
         self.last_cut_time = 0.0
@@ -219,10 +224,15 @@ class SileroVAD(BaseVAD):
         return float(out[0][0])
 
     def is_speech(self, chunk: np.ndarray) -> bool:
-        """Evaluates speech probability across the incoming audio chunk."""
+        """Evaluates speech probability across the incoming audio chunk using hybrid neural + acoustic energy."""
         pcm = chunk.astype(np.float32)
         if chunk.dtype == np.int16:
             pcm = pcm / 32768.0
+
+        rms = float(np.sqrt(np.mean(pcm ** 2)))
+        # Strictly reject digital silence and sub-noise ambient floor
+        if rms < 0.010:
+            return False
 
         num_subframes = max(1, len(pcm) // self.frame_size)
         probs = []
@@ -233,8 +243,10 @@ class SileroVAD(BaseVAD):
             prob = self._infer_probability(sub)
             probs.append(prob)
 
-        # Frame has speech if the peak sub-frame probability exceeds threshold
-        return max(probs) >= self.speech_threshold
+        # Hybrid check: neural probability OR clear vocal acoustic energy
+        neural_speech = max(probs) >= self.speech_threshold
+        energy_speech = rms >= 0.035
+        return neural_speech or energy_speech
 
     def process_frame(self, chunk: np.ndarray) -> tuple[bool, bool, bytes | None]:
         """
@@ -255,6 +267,7 @@ class SileroVAD(BaseVAD):
             if not self.speech_started:
                 if self.consecutive_speech_frames >= self.min_consecutive_frames:
                     self.speech_started = True
+                    self.speech_start_time = current_time
 
                     # Split-turn logging check: did user resume within 1000ms of last cutoff?
                     if self.last_cut_time > 0:
@@ -320,6 +333,7 @@ class SileroVAD(BaseVAD):
 
     def reset(self):
         self.speech_started = False
+        self.speech_start_time = 0.0
         self.last_speech_time = 0.0
         self.consecutive_speech_frames = 0
         self.accumulated_chunks.clear()
@@ -329,6 +343,7 @@ class SileroVAD(BaseVAD):
 
     def start_speech(self, chunk: np.ndarray | None = None):
         self.speech_started = True
+        self.speech_start_time = time.time()
         self.last_speech_time = time.time()
         self.consecutive_speech_frames = self.min_consecutive_frames
         if chunk is not None:
@@ -347,7 +362,7 @@ class VoiceActivityDetector(BaseVAD):
         self,
         energy_threshold: float | None = None,
         silence_timeout_ms: int | None = None,
-        min_speech_duration_sec: float = 0.55,
+        min_speech_duration_sec: float = 0.20,
         engine: str | None = None,
         **kwargs: Any
     ):
@@ -386,6 +401,14 @@ class VoiceActivityDetector(BaseVAD):
     @property
     def speech_started(self) -> bool:
         return getattr(self._engine, "speech_started", False)
+
+    @property
+    def speech_start_time(self) -> float:
+        return getattr(self._engine, "speech_start_time", 0.0)
+
+    @property
+    def last_speech_time(self) -> float:
+        return getattr(self._engine, "last_speech_time", 0.0)
 
     @property
     def last_voice_timestamp(self) -> float:

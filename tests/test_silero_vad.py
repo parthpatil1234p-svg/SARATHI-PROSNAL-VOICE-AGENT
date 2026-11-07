@@ -41,8 +41,8 @@ def test_silero_preroll_buffer_inclusion():
     speech_data, _ = sf.read(str(settings.ASSETS_DIR / "test_speech.wav"))
     pcm_all = (speech_data * 32767).astype(np.int16)
 
-    # Feed enough speech frames to trigger speech_started
-    for i in range(10):
+    # Feed active speech frames to trigger speech_started
+    for i in range(7, 12):
         chunk = pcm_all[i * 1280 : (i + 1) * 1280]
         has_sp, turn_done, _ = vad.process_frame(chunk)
         if vad.speech_started:

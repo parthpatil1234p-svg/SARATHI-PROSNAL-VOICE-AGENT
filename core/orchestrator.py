@@ -143,10 +143,21 @@ class AssistantOrchestrator:
                         # Fast-path A: Continuous voice mode or active dialogue follow-up window
                         is_continuous = getattr(settings, "CONTINUOUS_VOICE_MODE", True)
                         in_dialogue_window = time.time() < self.active_conversation_timeout
-                        if (is_continuous or in_dialogue_window) and self.vad.is_speech(chunk):
-                            self.state_machine.transition_to(AssistantState.LISTENING)
-                            self.vad.start_speech(chunk)
-                            continue
+                        if (is_continuous or in_dialogue_window):
+                            has_speech, turn_completed, audio_bytes = self.vad.process_frame(chunk)
+                            if self.vad.speech_started:
+                                self.state_machine.transition_to(AssistantState.LISTENING)
+                                if turn_completed and audio_bytes:
+                                    console.print("[dim]🎤 Speech turn completed. Transcribing...[/dim]")
+                                    last_voice_t = self.vad.last_voice_timestamp
+                                    vad_fire_t = time.time()
+                                    self.state_machine.transition_to(AssistantState.PROCESSING)
+                                    await self._handle_speech_turn(
+                                        audio_bytes,
+                                        last_voice_t=last_voice_t,
+                                        vad_fire_t=vad_fire_t
+                                    )
+                                continue
 
                         # Fast-path B: OpenWakeWord acoustic model trigger
                         if self.wake_detector.process_chunk(chunk):
@@ -208,7 +219,8 @@ class AssistantOrchestrator:
                         has_speech, turn_completed, audio_bytes = self.vad.process_frame(chunk)
 
                         # Timeout Guard 1: Cut off long continuous utterances (>6s) to ensure responsiveness
-                        if self.vad.speech_started and (now_t - self.vad.last_speech_time > 6.0):
+                        speech_start = getattr(self.vad, "speech_start_time", 0.0) or self.listening_start_time
+                        if self.vad.speech_started and (now_t - speech_start > 6.0):
                             snapshot = self.vad.get_current_audio_snapshot()
                             if snapshot:
                                 turn_completed = True

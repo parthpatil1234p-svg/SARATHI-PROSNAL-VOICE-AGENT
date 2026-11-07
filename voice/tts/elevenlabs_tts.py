@@ -50,12 +50,12 @@ class ElevenLabsTTSClient(BaseTTS):
         }
 
         try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
+            async with httpx.AsyncClient(timeout=3.0) as client:
                 resp = await client.post(url, json=payload, headers=headers)
                 resp.raise_for_status()
                 return resp.content
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS synthesis failed ({e}), falling back to local SAPI...")
+            logger.warning(f"ElevenLabs TTS synthesis failed/timed out ({e}), falling back to local SAPI...")
             try:
                 from voice.tts.sapi_tts import SapiTTSClient
                 sapi = SapiTTSClient()
