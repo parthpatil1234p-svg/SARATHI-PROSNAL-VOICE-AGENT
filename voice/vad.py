@@ -30,7 +30,7 @@ class RMSVAD(BaseVAD):
         self,
         energy_threshold: float | None = None,
         silence_timeout_ms: int | None = None,
-        min_speech_duration_sec: float = 0.55
+        min_speech_duration_sec: float = 0.20
     ):
         self.energy_threshold = energy_threshold or settings.VOICE_ACTIVITY_THRESHOLD
         self.silence_timeout_ms = silence_timeout_ms or settings.SILENCE_TIMEOUT_MS
@@ -146,9 +146,9 @@ class SileroVAD(BaseVAD):
         self,
         model_path: Path | str | None = None,
         silence_timeout_ms: int | None = None,
-        speech_threshold: float = 0.5,
+        speech_threshold: float = 0.35,
         preroll_ms: int = 200,
-        min_speech_duration_sec: float = 0.35,
+        min_speech_duration_sec: float = 0.20,
         sample_rate: int = 16000
     ):
         self.sample_rate = sample_rate

@@ -60,6 +60,7 @@ class AssistantOrchestrator:
         self.active_conversation_timeout: float = 0.0
         self.last_spoken_text: str = ""
         self.last_spoken_time: float = 0.0
+        self.listening_start_time: float = 0.0
         self.state_machine.add_listener(self._notify_state_change)
 
         # Speculative STT state tracking
@@ -71,6 +72,8 @@ class AssistantOrchestrator:
         self.filler_manager = filler_manager
 
     def _notify_state_change(self, old_state: AssistantState, new_state: AssistantState):
+        if new_state == AssistantState.LISTENING:
+            self.listening_start_time = time.time()
         try:
             loop = getattr(self, "loop", None)
             if loop and loop.is_running():
@@ -200,8 +203,24 @@ class AssistantOrchestrator:
                 # 2. State: LISTENING - Capturing user speech
                 elif self.state_machine.current_state == AssistantState.LISTENING:
                     chunk = self.audio_stream.read_chunk(timeout=0.1)
+                    now_t = time.time()
                     if chunk is not None:
                         has_speech, turn_completed, audio_bytes = self.vad.process_frame(chunk)
+
+                        # Timeout Guard 1: Cut off long continuous utterances (>6s) to ensure responsiveness
+                        if self.vad.speech_started and (now_t - self.vad.last_speech_time > 6.0):
+                            snapshot = self.vad.get_current_audio_snapshot()
+                            if snapshot:
+                                turn_completed = True
+                                audio_bytes = snapshot
+                                self.vad.reset()
+
+                        # Timeout Guard 2: No speech detected within 5 seconds of entering LISTENING
+                        if not self.vad.speech_started and (now_t - self.listening_start_time > 5.0):
+                            console.print("[dim]Listening timeout: No audible speech detected. Returning to standby.[/dim]")
+                            self.vad.reset()
+                            self.state_machine.transition_to(AssistantState.IDLE)
+                            continue
 
                         # Speculative STT: at ~220ms of silence in an active turn, trigger early transcription
                         if settings.ENABLE_SPECULATIVE_STT and self.vad.speech_started:
@@ -322,15 +341,15 @@ class AssistantOrchestrator:
                 self.state_machine.transition_to(AssistantState.IDLE)
                 return
 
-            # Check against acoustic self-echo
-            if self.last_spoken_text and (time.time() - self.last_spoken_time < 6.0):
+            # Check against acoustic self-echo (high threshold to never suppress valid user speech)
+            if self.last_spoken_text and (time.time() - self.last_spoken_time < 3.0):
                 recent_lower = self.last_spoken_text.lower()
                 clean_words = set(cleaned.split())
                 recent_words = set(recent_lower.split())
                 overlap = clean_words.intersection(recent_words)
                 overlap_ratio = len(overlap) / max(len(clean_words), 1)
 
-                if (cleaned in recent_lower or overlap_ratio >= 0.4) and len(clean_words) >= 2:
+                if (cleaned == recent_lower or overlap_ratio >= 0.75) and len(clean_words) >= 3:
                     console.print(f"[dim yellow]🛡️ Acoustic self-echo suppressed ({overlap_ratio:.0%} match): '{transcript}'[/dim yellow]")
                     self.state_machine.transition_to(AssistantState.IDLE)
                     return
@@ -648,7 +667,7 @@ class AssistantOrchestrator:
         """Synthesizes or plays an acoustic activation cue."""
         try:
             cue = "Yes, sir?"
-            self.last_spoken_text = cue
+            self.last_spoken_text = ""
             self.last_spoken_time = time.time()
             audio = await self.tts.synthesize(cue)
             player.play_bytes(audio)
