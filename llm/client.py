@@ -127,20 +127,30 @@ class LLMClient:
             yield "Apologies, sir. I encountered a communication error with my Gemini cognitive service."
 
     async def _stream_groq(
-        self, memory: ConversationMemory, messages: list[dict], tools: list[dict]
+        self,
+        memory: ConversationMemory,
+        messages: list[dict],
+        tools: list[dict],
+        model_idx: int = 0
     ) -> AsyncGenerator[str, None]:
+        # Mark-LVI inspired Model Ladder: smoothly steps down to fast reliable fallbacks on rate-limit/error
+        ladder = [self.model]
+        for fallback in ("llama-3.3-70b-versatile", "llama-3.1-8b-instant"):
+            if fallback not in ladder:
+                ladder.append(fallback)
+
+        current_model = ladder[min(model_idx, len(ladder) - 1)]
+
         try:
             extra_kwargs = {}
-            if "gpt-oss" in self.model.lower() or "reasoning" in self.model.lower():
+            if "gpt-oss" in current_model.lower() or "reasoning" in current_model.lower():
                 extra_kwargs["reasoning_effort"] = settings.GROQ_REASONING_EFFORT
-                # Reasoning models spend 40-100 tokens internally before producing content.
-                # A cap of 120 causes them to exhaust their token budget on reasoning alone, returning empty content.
                 max_tokens = 350
             else:
                 max_tokens = 150 if settings.ENABLE_LLM_LOW_LATENCY else 300
 
             stream = await self._groq_client.chat.completions.create(
-                model=self.model,
+                model=current_model,
                 messages=messages,
                 tools=tools if tools else None,
                 tool_choice="auto" if tools else None,
@@ -152,16 +162,30 @@ class LLMClient:
 
             tool_calls_accumulator = {}
             current_assistant_content = ""
+            in_thinking = [False]
 
             async for chunk in stream:
                 delta = chunk.choices[0].delta if chunk.choices else None
                 if not delta:
                     continue
 
-                # Stream standard content tokens (strictly content, never delta.reasoning)
+                # Stream standard content tokens (strictly content, filtered of reasoning tags)
                 if hasattr(delta, "content") and delta.content:
-                    current_assistant_content += delta.content
-                    yield delta.content
+                    raw_content = delta.content
+                    # Suppress reasoning <think> tags if emitted
+                    if "<think" in raw_content:
+                        in_thinking[0] = True
+                        raw_content = raw_content.split("<think")[0]
+                    if in_thinking[0]:
+                        if "</think>" in raw_content:
+                            in_thinking[0] = False
+                            raw_content = raw_content.split("</think>")[1]
+                        else:
+                            raw_content = ""
+
+                    if raw_content:
+                        current_assistant_content += raw_content
+                        yield raw_content
 
                 # Accumulate tool calls if emitted
                 if delta.tool_calls:
@@ -200,7 +224,7 @@ class LLMClient:
                     memory.add_tool_call_turn(call_id, name, raw_args, str(result))
 
                 # Recursively stream the post-tool voice response
-                async for token in self._stream_groq(memory, memory.get_messages(), tools):
+                async for token in self._stream_groq(memory, memory.get_messages(), tools, model_idx=model_idx):
                     yield token
             else:
                 if current_assistant_content:
@@ -211,8 +235,21 @@ class LLMClient:
                     yield fallback_text
 
         except Exception as e:
-            logger.error(f"Groq streaming error: {e}", exc_info=True)
-            yield "Apologies, sir. I encountered a communication error with my core cognitive service."
+            err_str = str(e).lower()
+            logger.warning(f"Groq model '{current_model}' encountered error: {e}")
+            # If rate limited (429) or model issue and next rung on ladder exists, step down
+            if model_idx + 1 < len(ladder):
+                next_model = ladder[model_idx + 1]
+                logger.info(f"Stepping down model ladder: {current_model} ➔ {next_model}")
+                async for token in self._stream_groq(memory, messages, tools, model_idx=model_idx + 1):
+                    yield token
+            elif self._gemini_client:
+                logger.info("All Groq ladder rungs exhausted. Stepping to Google Gemini fallback.")
+                async for token in self._stream_gemini(memory):
+                    yield token
+            else:
+                logger.error(f"Groq streaming ladder exhausted: {e}", exc_info=True)
+                yield "Apologies, sir. All cognitive processing rungs encountered an error."
 
     async def _stream_openai(
         self, memory: ConversationMemory, messages: list[dict], tools: list[dict]
