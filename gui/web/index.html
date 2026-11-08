@@ -197,7 +197,7 @@
   <!-- ========================================================================= -->
   <!-- MAIN COCKPIT VIEW (#view-cockpit)                                         -->
   <!-- ========================================================================= -->
-  <main class="flex-1 flex flex-col p-3 gap-3 overflow-hidden z-10" id="view-cockpit">
+  <main class="hidden flex-1 flex flex-col p-3 gap-3 overflow-hidden z-10" id="view-cockpit">
     <div class="grid grid-cols-12 gap-3 flex-1 min-h-0">
 
       <!-- ================= ZONE 1: LEFT TELEMETRY SIDEBAR (Col 1-3) ================= -->
@@ -946,7 +946,7 @@
   <!-- ========================================================================= -->
   <!-- BOTTOM STATUS FOOTER (Fixed 28px)                                         -->
   <!-- ========================================================================= -->
-  <footer class="h-7 bg-surface-container-lowest/95 backdrop-blur-md border-t border-surface-container-highest/60 px-4 flex items-center justify-between font-telemetry text-[10px] z-40 select-none flex-shrink-0">
+  <footer class="hidden h-7 bg-surface-container-lowest/95 backdrop-blur-md border-t border-surface-container-highest/60 px-4 flex items-center justify-between font-telemetry text-[10px] z-40 select-none flex-shrink-0">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-1">
         <span class="font-label text-[8px] text-outline uppercase">CORE:</span>
@@ -1782,8 +1782,13 @@
       }
     }
 
+    // Guarantee Compact Floating Circular Voice Orb on initial load
+    switchView('compact');
+    document.addEventListener('DOMContentLoaded', () => switchView('compact'));
+
     // Initial Data Fetch on Ready
     window.addEventListener('pywebviewready', () => {
+      switchView('compact');
       if (window.pywebview?.api) {
         window.pywebview.api.get_initial_data().then(data => {
           if (data && data.settings) {
