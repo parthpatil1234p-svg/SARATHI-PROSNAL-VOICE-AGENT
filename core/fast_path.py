@@ -53,21 +53,40 @@ def check_fast_path(user_text: str) -> FastPathResult:
         spoken = f"Today is {day_str}, sir."
         return FastPathResult(True, spoken, "get_date", day_str)
 
-    # 2. Master System Volume Control
+    # 2. Master System Volume & Dedicated Mute Controls
     vol_match = re.search(r'(?:set\s+)?volume\s+(?:to\s+)?(\d{1,3})(?:\s*%)?', cleaned)
     if vol_match:
         val = int(vol_match.group(1))
         res = set_system_volume(val)
-        spoken = f"Master audio volume adjusted to {val} percent, sir."
+        spoken = f"Master audio volume adjusted to {val} percent, Parth."
         return FastPathResult(True, spoken, "set_system_volume", res)
 
-    if cleaned in ("mute", "mute audio", "mute system", "mute sound"):
-        res = mute_system(True)
-        return FastPathResult(True, "System audio muted, sir.", "mute_system", res)
+    # A. Microphone Mute & Unmute
+    if any(q in cleaned for q in ("mute my mic", "mute mic", "mute microphone", "stop listening", "mera mic mute", "mic band")):
+        spoken = "Microphone muted, Parth. Click the mic button on the bottom bar or type 'unmute' to speak again."
+        return FastPathResult(True, spoken, "mute_microphone", {"muted": True})
 
-    if cleaned in ("unmute", "unmute audio", "unmute system", "unmute sound"):
+    if any(q in cleaned for q in ("unmute my mic", "unmute mic", "unmute microphone", "start listening", "mera mic chalu", "unmute")):
+        spoken = "Microphone unmuted, Parth! I'm listening."
+        return FastPathResult(True, spoken, "unmute_microphone", {"muted": False})
+
+    # B. Assistant Voice Output Mute & Unmute
+    if any(q in cleaned for q in ("mute your audio", "mute yourself", "be quiet", "silent mode", "shant raho", "chup raho")):
+        spoken = "Entering silent mode, Parth. My spoken voice is muted. I will respond via text until you ask me to speak."
+        return FastPathResult(True, spoken, "mute_voice", {"muted": True})
+
+    if any(q in cleaned for q in ("unmute your audio", "unmute yourself", "speak up", "voice on", "voice mode on")):
+        spoken = "Spoken voice output is unmuted, Parth! Ready to talk."
+        return FastPathResult(True, spoken, "unmute_voice", {"muted": False})
+
+    # C. Windows OS Master Sound Mute & Unmute
+    if cleaned in ("mute system", "mute computer", "mute pc", "mute system sound", "mute sound", "mute audio", "mute"):
+        res = mute_system(True)
+        return FastPathResult(True, "System master audio muted, Parth.", "mute_system", res)
+
+    if cleaned in ("unmute system", "unmute computer", "unmute pc", "unmute system sound", "unmute sound", "unmute audio"):
         res = mute_system(False)
-        return FastPathResult(True, "System audio unmuted, sir.", "mute_system", res)
+        return FastPathResult(True, "System master audio unmuted, Parth.", "mute_system", res)
 
     # 3. Application Launcher
     app_match = re.match(r'(?:open|launch|start)\s+([a-zA-Z0-9\s]+)', cleaned)

@@ -90,6 +90,7 @@ class AssistantOrchestrator:
             chunk_size=settings.CHUNK_SIZE
         )
         self.is_running = False
+        self.is_mic_muted: bool = False
         self.active_conversation_timeout: float = 0.0
         self.last_spoken_text: str = ""
         self.last_spoken_time: float = 0.0
@@ -436,6 +437,22 @@ class AssistantOrchestrator:
                 os._exit(0)
                 return
 
+            # Direct Mute & Unmute Commands (always handled instantly)
+            cleaned_lower = effective_text.lower().strip().rstrip(".,!?")
+            if any(q in cleaned_lower for q in ("mute my mic", "mute mic", "mute microphone", "stop listening", "mera mic mute", "mic band")):
+                audio_started_event.set()
+                await self.speak_direct("Microphone muted, Parth. Click the mic button on the bottom bar or type 'unmute' to speak again.", tracker=tracker)
+                self.mute_microphone()
+                self.state_machine.transition_to(AssistantState.IDLE)
+                return
+
+            if any(q in cleaned_lower for q in ("unmute my mic", "unmute mic", "unmute microphone", "start listening", "mera mic chalu", "unmute")):
+                self.unmute_microphone()
+                audio_started_event.set()
+                await self.speak_direct("Microphone unmuted, Parth! I'm listening.", tracker=tracker)
+                self.state_machine.transition_to(AssistantState.IDLE)
+                return
+
             # Check for rule/intent fast path (bypasses LLM for deterministic queries)
             if settings.ENABLE_RULE_FAST_PATH:
                 from core.fast_path import check_fast_path
@@ -494,6 +511,22 @@ class AssistantOrchestrator:
             self.state_machine.transition_to(AssistantState.PROCESSING)
             self.memory.add_user_message(user_text)
             await event_bus.publish("user_speech", {"text": user_text, "latency_ms": 0})
+
+            # Direct Mute & Unmute Commands (always handled instantly)
+            cleaned_lower = effective_text.lower().strip().rstrip(".,!?")
+            if any(q in cleaned_lower for q in ("mute my mic", "mute mic", "mute microphone", "stop listening", "mera mic mute", "mic band")):
+                audio_started_event.set()
+                await self.speak_direct("Microphone muted, Parth. Click the mic button on the bottom bar or type 'unmute' to speak again.", tracker=tracker)
+                self.mute_microphone()
+                self.state_machine.transition_to(AssistantState.IDLE)
+                return
+
+            if any(q in cleaned_lower for q in ("unmute my mic", "unmute mic", "unmute microphone", "start listening", "mera mic chalu", "unmute")):
+                self.unmute_microphone()
+                audio_started_event.set()
+                await self.speak_direct("Microphone unmuted, Parth! I'm listening.", tracker=tracker)
+                self.state_machine.transition_to(AssistantState.IDLE)
+                return
 
             # Check for rule/intent fast path (bypasses LLM for deterministic queries)
             if settings.ENABLE_RULE_FAST_PATH:
@@ -733,3 +766,46 @@ class AssistantOrchestrator:
         player.interrupt()
         self.audio_stream.stop()
         logger.info("Assistant orchestrator terminated.")
+
+    def mute_microphone(self) -> bool:
+        """Mutes the input microphone stream."""
+        if self.audio_stream:
+            self.audio_stream.is_muted = True
+        self.is_mic_muted = True
+        try:
+            loop = getattr(self, "loop", None)
+            if loop and loop.is_running():
+                asyncio.run_coroutine_threadsafe(event_bus.publish("mic_mute_changed", {"muted": True}), loop)
+            else:
+                running = asyncio.get_running_loop()
+                running.create_task(event_bus.publish("mic_mute_changed", {"muted": True}))
+        except Exception:
+            pass
+        logger.info("Microphone MUTED.")
+        return True
+
+    def unmute_microphone(self) -> bool:
+        """Unmutes the input microphone stream."""
+        if self.audio_stream:
+            self.audio_stream.is_muted = False
+        self.is_mic_muted = False
+        try:
+            loop = getattr(self, "loop", None)
+            if loop and loop.is_running():
+                asyncio.run_coroutine_threadsafe(event_bus.publish("mic_mute_changed", {"muted": False}), loop)
+            else:
+                running = asyncio.get_running_loop()
+                running.create_task(event_bus.publish("mic_mute_changed", {"muted": False}))
+        except Exception:
+            pass
+        logger.info("Microphone UNMUTED.")
+        return True
+
+    def toggle_microphone(self) -> bool:
+        """Toggles microphone mute state and returns True if muted, False if unmuted."""
+        if getattr(self, "is_mic_muted", False):
+            self.unmute_microphone()
+            return False
+        else:
+            self.mute_microphone()
+            return True

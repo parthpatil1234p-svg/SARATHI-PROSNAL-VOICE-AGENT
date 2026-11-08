@@ -31,6 +31,7 @@ class AudioInputStream:
         self.audio_queue: queue.Queue[np.ndarray] = queue.Queue(maxsize=100)
         self.stream: sd.InputStream | None = None
         self.is_running = False
+        self.is_muted = False
         self.latest_rms: float = 0.0
         self.latest_level: int = 0
 
@@ -40,6 +41,21 @@ class AudioInputStream:
             logger.warning(f"Audio buffer status warning: {status}")
 
         if not self.is_running:
+            return
+
+        # If microphone is muted, output zero level and feed silence
+        if self.is_muted:
+            self.latest_rms = 0.0
+            self.latest_level = 0
+            silent_chunk = np.zeros(frames, dtype=np.int16)
+            try:
+                self.audio_queue.put_nowait(silent_chunk)
+            except queue.Full:
+                try:
+                    self.audio_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                self.audio_queue.put_nowait(silent_chunk)
             return
 
         from config.settings import settings

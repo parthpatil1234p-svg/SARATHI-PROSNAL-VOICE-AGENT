@@ -1195,6 +1195,44 @@
     }
 
     // Quick Action Handler with instant debounce and responsive feedback
+        function updateMicMuteUI(isMuted) {
+      const btn = document.getElementById('quick-mic-mute-btn');
+      const micDisp = document.getElementById('mic-status-display');
+      const input = document.getElementById('tactical-input');
+      if (btn) {
+        if (isMuted) {
+          btn.classList.remove('bg-surface-container', 'text-on-surface');
+          btn.classList.add('bg-error/30', 'text-error', 'border-error', 'ring-1', 'ring-error');
+          const spans = btn.querySelectorAll('span');
+          if (spans[0]) spans[0].textContent = 'mic_off';
+          if (spans[1]) spans[1].textContent = 'UNMUTE MIC';
+        } else {
+          btn.classList.remove('bg-error/30', 'text-error', 'border-error', 'ring-1', 'ring-error');
+          btn.classList.add('bg-surface-container', 'text-on-surface');
+          const spans = btn.querySelectorAll('span');
+          if (spans[0]) spans[0].textContent = 'mic';
+          if (spans[1]) spans[1].textContent = 'Mute Mic';
+        }
+      }
+      if (micDisp) {
+        micDisp.textContent = isMuted ? '🔴 MIC MUTED' : 'ARRAY_01 ACTIVE';
+        if (isMuted) {
+          micDisp.classList.remove('text-primary');
+          micDisp.classList.add('text-error', 'font-bold');
+        } else {
+          micDisp.classList.remove('text-error', 'font-bold');
+          micDisp.classList.add('text-primary');
+        }
+      }
+      if (input) {
+        if (isMuted) {
+          input.placeholder = "[MIC MUTED] Type command here or type 'unmute' to speak again...";
+        } else {
+          input.placeholder = "Ask Sarathi or type a command... (e.g. 'What is my CPU usage?', 'Set volume to 40%')";
+        }
+      }
+    }
+
     let isActionRunning = false;
     function runQuickAction(actionId, btnEl) {
       if (isActionRunning && actionId !== 'mute_mic') return;
@@ -1210,10 +1248,7 @@
           if (btnEl) btnEl.classList.remove('opacity-40', 'pointer-events-none');
 
           if (actionId === 'mute_mic' && res && res.muted !== undefined) {
-            const btn = document.getElementById('quick-mic-mute-btn');
-            if (btn) btn.querySelector('span:last-child').textContent = res.muted ? 'Unmute Mic' : 'Mute Mic';
-            const micDisp = document.getElementById('mic-status-display');
-            if (micDisp) micDisp.textContent = res.muted ? 'MIC MUTED' : 'ARRAY_01 ACTIVE';
+            updateMicMuteUI(res.muted);
           }
         }).catch(err => {
           console.warn("Action execution error:", err);
@@ -1413,7 +1448,11 @@
 
     // Global Python Event Dispatcher Hook for SARATHI
     window.onSarathiEvent = function(eventName, data) {
-      if (eventName === 'state_changed') {
+      if (eventName === 'mic_mute_changed') {
+        if (data && data.muted !== undefined) {
+          updateMicMuteUI(data.muted);
+        }
+      } else if (eventName === 'state_changed') {
         setAssistantState(data);
       } else if (eventName === 'user_speech') {
         if (data && data.text) {

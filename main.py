@@ -97,11 +97,18 @@ async def main():
         run_gui()
         return
 
+    # Enforce Single-Instance Execution across Windows ("one task only one time")
+    from core.single_instance import SingleInstanceLock
+    instance_lock = SingleInstanceLock()
+    if not instance_lock.try_acquire():
+        console.print("[bold green]SARATHI is already running in background. Brought your tactical dashboard to the front.[/bold green]")
+        return
+
     # If --background or --minimized passed, launch Tactical HUD silently in background
     if args.background or args.minimized:
         try:
             from gui.hud import run_tactical_hud
-            run_tactical_hud(background=True)
+            run_tactical_hud(background=True, lock=instance_lock)
             return
         except Exception as e:
             console.print(f"[yellow]Background HUD start error: {e}. Running headless voice loop.[/yellow]")
@@ -111,7 +118,7 @@ async def main():
     if args.gui or (not args.cli and not args.voice and not args.devices and not args.tools):
         try:
             from gui.hud import run_tactical_hud
-            run_tactical_hud(background=False)
+            run_tactical_hud(background=False, lock=instance_lock)
             return
         except Exception as e:
             console.print(f"[yellow]Tactical HUD encountered: {e}. Falling back to standard Tkinter GUI.[/yellow]")

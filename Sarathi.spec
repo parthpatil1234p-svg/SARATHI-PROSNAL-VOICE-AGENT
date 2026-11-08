@@ -77,10 +77,10 @@ hidden_imports = [
     "winreg",
     "core.persistent_memory",
     "core.system_startup",
+    "core.single_instance",
 ]
 
 # Add any additional submodules
-hidden_imports += collect_submodules("openwakeword")
 hidden_imports += collect_submodules("pydantic")
 hidden_imports += collect_submodules("pydantic_settings")
 hidden_imports += collect_submodules("httpx")
@@ -94,7 +94,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["tkinter.test"],
+    excludes=["tkinter.test", "sklearn", "scipy", "numpy.f2py"],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

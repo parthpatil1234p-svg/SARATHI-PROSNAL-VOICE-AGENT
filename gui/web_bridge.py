@@ -123,6 +123,16 @@ class SarathiWebBridge:
         if not cleaned:
             return {"status": "empty"}
 
+        # Direct unmute command via typed prompt when mic is muted
+        if cleaned.lower() in ("unmute", "unmute mic", "unmute microphone", "start listening", "mera mic chalu"):
+            self._orchestrator.unmute_microphone()
+            if self._loop and self._loop.is_running():
+                asyncio.run_coroutine_threadsafe(
+                    self._orchestrator.speak_direct("Microphone unmuted, Parth! I'm listening."),
+                    self._loop
+                )
+            return {"status": "ok", "prompt": cleaned, "mic_unmuted": True}
+
         if self._loop and self._loop.is_running():
             asyncio.run_coroutine_threadsafe(
                 self._orchestrator.process_text_turn(cleaned),
@@ -203,14 +213,11 @@ class SarathiWebBridge:
             return {"status": "busy", "message": "SARATHI is processing previous action."}
 
         if action_id == "mute_mic":
-            self._is_mic_muted = not self._is_mic_muted
-            if self._is_mic_muted:
-                self._orchestrator.audio_stream.stop()
-                msg = "Microphone muted."
-            else:
-                self._orchestrator.audio_stream.start()
-                msg = "Microphone unmuted."
-            return {"status": "ok", "muted": self._is_mic_muted, "message": msg}
+            is_muted = self._orchestrator.toggle_microphone()
+            self._is_mic_muted = is_muted
+            msg = "Microphone muted." if is_muted else "Microphone unmuted."
+            logger.info(f"[Quick Action] {msg}")
+            return {"status": "ok", "muted": is_muted, "message": msg}
 
         if not self._loop or not self._loop.is_running():
             # Fallback for headless testing when no async loop is active

@@ -63,6 +63,7 @@ class SarathiHUDApp:
         event_bus.subscribe("tool_executed", lambda p: on_event("tool_executed", p))
         event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
         event_bus.subscribe("wake_detected", lambda p: self._on_wake_detected())
+        event_bus.subscribe("mic_mute_changed", lambda p: on_event("mic_mute_changed", p))
 
         # Start continuous voice loop by default
         self.bridge._is_voice_active = True
@@ -120,7 +121,7 @@ class SarathiHUDApp:
 
             time.sleep(0.03)
 
-    def launch(self, start_in_background: bool = False):
+    def launch(self, start_in_background: bool = False, lock=None):
         """Launches the Mark VII Tactical HUD Window."""
         html_path = BASE_DIR / "gui" / "web" / "index.html"
         if not html_path.exists():
@@ -133,7 +134,12 @@ class SarathiHUDApp:
         self.telemetry_thread = threading.Thread(target=self._telemetry_ticker, daemon=True)
         self.telemetry_thread.start()
 
+        # Listen for secondary instance restore signals if single-instance lock is active
+        if lock and hasattr(lock, "start_listener"):
+            lock.start_listener(on_restore_callback=lambda: self._on_wake_detected())
+
         # Create Native Windows 11 Desktop Window (1440x900 as per Mark VII specs)
+        # In background mode, starts minimized to the taskbar so the application icon is always visible
         self.window = webview.create_window(
             title="SARATHI // Autonomous Desktop AI Assistant",
             url=str(html_path.resolve()),
@@ -144,13 +150,14 @@ class SarathiHUDApp:
             background_color="#0A0E14",
             frameless=False,
             easy_drag=True,
-            hidden=start_in_background
+            minimized=start_in_background,
+            hidden=False
         )
         self.bridge.set_window(self.window)
         self.window.events.closing += self._on_window_closing
 
         if start_in_background:
-            logger.info("SARATHI started in background mode. Silently listening for 'Hey Sarathi'.")
+            logger.info("SARATHI started in background mode (minimized to taskbar). Silently listening for 'Hey Sarathi'.")
 
         # Starts the native WebView2 message loop on the main thread (blocking until closed)
         webview.start(debug=False)
@@ -162,10 +169,10 @@ class SarathiHUDApp:
 JarvisHUDApp = SarathiHUDApp
 
 
-def run_tactical_hud(background: bool = False):
+def run_tactical_hud(background: bool = False, lock=None):
     """Entry point to launch the tactical desktop HUD."""
     app = SarathiHUDApp()
-    app.launch(start_in_background=background)
+    app.launch(start_in_background=background, lock=lock)
 
 
 if __name__ == "__main__":
