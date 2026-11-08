@@ -177,7 +177,7 @@ class AssistantOrchestrator:
                     chunk = self.audio_stream.read_chunk(timeout=0.1)
                     if chunk is not None:
                         # Fast-path A: Continuous voice mode or active dialogue follow-up window
-                        is_continuous = getattr(settings, "CONTINUOUS_VOICE_MODE", True)
+                        is_continuous = getattr(settings, "CONTINUOUS_VOICE_MODE", False)
                         in_dialogue_window = time.time() < self.active_conversation_timeout
                         if (is_continuous or in_dialogue_window):
                             has_speech, turn_completed, audio_bytes = self.vad.process_frame(chunk)
@@ -234,14 +234,9 @@ class AssistantOrchestrator:
                                     else:
                                         self.state_machine.transition_to(AssistantState.LISTENING)
                                         self.vad.reset()
-                                elif len(cleaned.split()) >= 1 and cleaned not in (
-                                    "", "you", "thanks for watching", "thank you for watching",
-                                    "subtitles", "subtitles by", "subtitle", ".", "...", "[music]", "[applause]"
-                                ):
-                                    console.print(f"[bold cyan]Direct speech turn processed: '{transcript}'[/bold cyan]")
-                                    self.active_conversation_timeout = time.time() + 10.0
-                                    self.state_machine.transition_to(AssistantState.PROCESSING)
-                                    await self.process_text_turn(transcript)
+                                else:
+                                    # Ambient noise/speech without wake word in IDLE: ignore quietly
+                                    logger.debug(f"[IDLE Noise Ignored] '{transcript}' did not match wake keywords.")
                             except Exception as e:
                                 logger.error(f"Error evaluating idle wake audio: {e}")
                             finally:

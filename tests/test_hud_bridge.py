@@ -143,3 +143,17 @@ def test_hud_app_wake_detected(monkeypatch):
     assert mock_win.show_called is True
     assert mock_win.restore_called is True
     assert any("wake_detected" in js for js in mock_win.js_calls)
+
+
+def test_bridge_compact_expand(bridge):
+    res_compact = bridge.collapse_to_compact()
+    assert res_compact.get("status") == "ok"
+    assert bridge.is_compact is True
+
+    res_expand = bridge.expand_dashboard()
+    assert res_expand.get("status") == "ok"
+    assert bridge.is_compact is False
+
+    res_toggle = bridge.toggle_compact_mode()
+    assert res_toggle.get("status") == "ok"
+    assert bridge.is_compact is True

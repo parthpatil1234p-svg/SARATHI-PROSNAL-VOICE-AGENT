@@ -55,13 +55,13 @@ class ElevenLabsTTSClient(BaseTTS):
                 resp.raise_for_status()
                 return resp.content
         except Exception as e:
-            logger.warning(f"ElevenLabs TTS synthesis failed/timed out ({e}), falling back to local SAPI...")
+            logger.warning(f"ElevenLabs TTS synthesis failed/timed out ({e}), falling back to natural EdgeTTS...")
             try:
-                from voice.tts.sapi_tts import SapiTTSClient
-                sapi = SapiTTSClient()
-                return await sapi.synthesize(text)
+                from voice.tts.edge_tts_client import EdgeTTSClient
+                edge = EdgeTTSClient()
+                return await edge.synthesize(text)
             except Exception as se:
-                logger.error(f"SAPI fallback failed: {se}")
+                logger.error(f"EdgeTTS fallback failed: {se}")
                 raise e
 
     async def stream_audio_chunks(self, text: str) -> AsyncGenerator[bytes, None]:

@@ -165,8 +165,9 @@ class SarathiHUDApp:
 
     def _on_wake_detected(self):
         """
-        Restores and brings the full tactical HUD dashboard window to the foreground
-        when 'Hey Sarathi' wake word is detected or secondary instance requests focus.
+        Restores and brings SARATHI to the foreground when 'Hey Sarathi' wake word is detected.
+        Pops up the compact floating 3D tactical widget so it never disrupts the user's workflow,
+        with an interactive button to expand into the full Mark VII Cockpit Dashboard.
         """
         if not self.is_running:
             return
@@ -185,16 +186,20 @@ class SarathiHUDApp:
             # 2. Native Win32 foreground activation (unminimizes and pops to front of all apps)
             bring_sarathi_window_to_front("SARATHI")
 
-            # 3. Ensure Web UI switches to full Cockpit dashboard view
+            # 3. Present as compact floating 3D popup on wake detection
+            if hasattr(self.bridge, "collapse_to_compact"):
+                self.bridge.collapse_to_compact()
+
+            # 4. Dispatch wake_detected to Web UI
             if self.window:
                 try:
                     self.window.evaluate_js(
-                        "if (window.onSarathiEvent) window.onSarathiEvent('wake_detected', {});"
+                        "if (window.onSarathiEvent) window.onSarathiEvent('wake_detected', {mode: 'compact'});"
                     )
                 except Exception:
                     pass
 
-            logger.info("Tactical HUD full dashboard restored and brought to foreground on wake detection.")
+            logger.info("SARATHI compact floating 3D HUD restored to foreground on wake detection.")
         except Exception as e:
             logger.debug(f"Window restore error: {e}")
 
@@ -273,7 +278,7 @@ class SarathiHUDApp:
             js_api=self.bridge,
             width=1440,
             height=900,
-            min_size=(1024, 700),
+            min_size=(380, 260),
             background_color="#0A0E14",
             frameless=False,
             easy_drag=True,

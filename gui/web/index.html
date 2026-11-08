@@ -37,6 +37,30 @@
     .hud-glow-red {
       box-shadow: 0 0 20px rgba(255, 51, 102, 0.45);
     }
+
+    @keyframes spinGyro1 {
+      0% { transform: rotateX(65deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(65deg) rotateY(360deg) rotateZ(360deg); }
+    }
+    @keyframes spinGyro2 {
+      0% { transform: rotateX(-50deg) rotateY(0deg) rotateZ(0deg); }
+      100% { transform: rotateX(-50deg) rotateY(-360deg) rotateZ(-360deg); }
+    }
+    @keyframes corePulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px #00e5ff); }
+      50% { transform: scale(1.15); filter: drop-shadow(0 0 24px #00e5ff); }
+    }
+    .gyro-ring-1 {
+      animation: spinGyro1 7s linear infinite;
+      transform-style: preserve-3d;
+    }
+    .gyro-ring-2 {
+      animation: spinGyro2 5s linear infinite;
+      transform-style: preserve-3d;
+    }
+    .core-pulse {
+      animation: corePulse 2s ease-in-out infinite;
+    }
   </style>
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -93,7 +117,7 @@
   <!-- ========================================================================= -->
   <!-- TOP COMMAND HEADER BAR (Fixed 40px)                                      -->
   <!-- ========================================================================= -->
-  <header class="h-10 w-full px-4 flex items-center justify-between bg-surface-container-low/95 backdrop-blur-md border-b border-surface-container-highest/60 z-40 select-none flex-shrink-0">
+  <header id="main-header-bar" class="h-10 w-full px-4 flex items-center justify-between bg-surface-container-low/95 backdrop-blur-md border-b border-surface-container-highest/60 z-40 select-none flex-shrink-0">
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-1.5 text-primary-container">
         <span class="material-symbols-outlined text-[18px]">token</span>
@@ -139,6 +163,12 @@
           <span>Voice Studio</span>
         </button>
       </nav>
+
+      <!-- Compact Floating Widget Mode Button -->
+      <button aria-label="Compact Mode" title="Collapse into Sleek Floating 3D Popup" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-surface-container hover:bg-surface-bright border border-outline-variant/40 text-primary-container font-telemetry text-[11px] ml-1 transition-all shadow-sm" onclick="collapseToCompact()" type="button">
+        <span class="material-symbols-outlined text-[14px]">close_fullscreen</span>
+        <span class="font-semibold tracking-wider">COMPACT HUD</span>
+      </button>
 
       <!-- System Power Down / Exit Button -->
       <button aria-label="Power Down" title="Completely Exit / Power Off SARATHI" class="flex items-center gap-1.5 px-3 py-1 rounded bg-error-container/20 border border-error/40 text-error hover:bg-error hover:text-on-error transition-all font-telemetry text-[11px] ml-2 shadow-sm" onclick="confirmPowerOff()" type="button">
@@ -664,6 +694,81 @@
     </div>
   </main>
 
+  <!-- ========================================================================= -->
+  <!-- COMPACT FLOATING 3D POPUP VIEW (#view-compact)                            -->
+  <!-- ========================================================================= -->
+  <main class="hidden flex-1 flex-col p-2.5 overflow-hidden z-10 w-full h-full justify-between select-none" id="view-compact">
+    <div class="relative flex-1 flex flex-col justify-between bg-surface-container-lowest/95 backdrop-blur-2xl rounded-2xl border border-primary-container/40 p-3 shadow-[0_0_35px_rgba(0,229,255,0.3)] group overflow-hidden">
+      
+      <!-- Top Micro Header -->
+      <div class="flex items-center justify-between z-20 pb-1.5 border-b border-surface-container-highest/60 select-none">
+        <div class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px] text-primary-container animate-spin" style="animation-duration: 9s;">token</span>
+          <span class="font-label text-[10px] text-primary uppercase font-bold tracking-widest">SARATHI 3D</span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <!-- Live State Pill -->
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded bg-surface-container-highest/90" id="compact-state-pill">
+            <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse" id="compact-state-dot"></span>
+            <span class="font-label text-[8px] text-secondary-fixed-dim uppercase tracking-wider font-semibold" id="compact-state-text">ONLINE</span>
+          </div>
+
+          <!-- Expand to Full Dashboard Button -->
+          <button onclick="expandToFullDashboard()" title="Expand to Full Tactical Cockpit Dashboard" class="flex items-center gap-1 px-2 py-0.5 rounded bg-primary-container hover:bg-primary-container/90 text-on-primary-container border border-primary-container font-telemetry text-[9px] font-bold uppercase transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[12px]">open_in_full</span>
+            <span>EXPAND</span>
+          </button>
+
+          <!-- Dismiss / Hide to background -->
+          <button onclick="hideToBackground()" title="Hide to Background Resident Mode" class="w-6 h-6 rounded flex items-center justify-center bg-surface-container hover:bg-surface-container-high text-on-surface-variant hover:text-error border border-outline-variant/30 transition-colors">
+            <span class="material-symbols-outlined text-[13px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Center 3D Gyroscopic Hologram -->
+      <div class="relative flex-1 flex items-center justify-center my-1 select-none cursor-pointer" onclick="triggerManualWake()" title="Click to Talk / Wake Sarathi" style="perspective: 600px;">
+        <!-- 3D Gyro Rings Container -->
+        <div class="relative w-28 h-28 flex items-center justify-center" id="compact-gyro-container">
+          <!-- Outer Cyan 3D Gyro Ring -->
+          <div class="absolute inset-0 rounded-full border-2 border-dashed border-primary-container/80 shadow-[0_0_15px_rgba(0,229,255,0.4)] gyro-ring-1"></div>
+          <!-- Middle Orange Gyro Ring -->
+          <div class="absolute inset-2 rounded-full border border-tertiary-container/80 shadow-[0_0_12px_rgba(255,200,99,0.35)] gyro-ring-2"></div>
+          <!-- Inner Core Reactor -->
+          <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-primary-container/30 to-primary/80 border border-primary flex items-center justify-center core-pulse shadow-[0_0_20px_rgba(0,229,255,0.8)]" id="compact-reactor-core">
+            <span class="material-symbols-outlined text-white text-[20px] drop-shadow-[0_0_6px_rgba(0,229,255,1)]" id="compact-core-icon">graphic_eq</span>
+          </div>
+        </div>
+
+        <!-- Hover Quick Actions Overlay (Reveals smoothly on mouse hover) -->
+        <div class="absolute inset-x-2 bottom-0 flex items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-30 bg-surface-container-low/95 backdrop-blur-md p-1.5 rounded-xl border border-primary-container/40 shadow-2xl">
+          <button onclick="expandToFullDashboard(); event.stopPropagation();" class="flex items-center gap-1 px-2.5 py-1 rounded bg-primary-container text-on-primary-container font-telemetry text-[9px] font-bold uppercase hover:brightness-110 transition-all shadow">
+            <span class="material-symbols-outlined text-[12px]">dashboard</span>
+            <span>Full Dashboard</span>
+          </button>
+          <button onclick="toggleMicMute(); event.stopPropagation();" id="compact-hover-mic-btn" class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container hover:bg-surface-bright text-on-surface font-telemetry text-[9px] uppercase border border-outline-variant/40 transition-all">
+            <span class="material-symbols-outlined text-[12px]">mic</span>
+            <span id="compact-mic-label">Mute</span>
+          </button>
+          <button onclick="toggleConfigModal(true); event.stopPropagation();" class="flex items-center gap-1 px-2.5 py-1 rounded bg-surface-container hover:bg-surface-bright text-on-surface font-telemetry text-[9px] uppercase border border-outline-variant/40 transition-all">
+            <span class="material-symbols-outlined text-[12px]">tune</span>
+            <span>Studio</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Spoken Dialogue Feed -->
+      <div class="bg-surface-container-low/90 rounded-lg p-2 border border-surface-container-highest/80 flex items-center gap-2 z-20">
+        <span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-pulse flex-shrink-0"></span>
+        <p class="font-headline text-[11px] text-on-surface leading-tight truncate flex-1" id="compact-transcript-text">
+          "All systems online, Parth. Standing by..."
+        </p>
+      </div>
+
+    </div>
+  </main>
+
 
   <!-- ========================================================================= -->
   <!-- CONFIGURATION & VOICE STUDIO MODAL (#modal-config)                       -->
@@ -876,36 +981,72 @@
       const cockpit = document.getElementById('view-cockpit');
       const barge = document.getElementById('view-barge');
       const logs = document.getElementById('view-logs');
+      const compact = document.getElementById('view-compact');
+      const headerBar = document.getElementById('main-header-bar');
+      const footerBar = document.querySelector('footer');
       const btnCockpit = document.getElementById('nav-btn-cockpit');
       const btnBarge = document.getElementById('nav-btn-barge');
       const btnLogs = document.getElementById('nav-btn-logs');
 
-      cockpit.classList.add('hidden');
-      barge.classList.add('hidden');
+      if (cockpit) cockpit.classList.add('hidden');
+      if (barge) {
+        barge.classList.add('hidden');
+        barge.classList.remove('flex');
+      }
       if (logs) {
         logs.classList.add('hidden');
         logs.classList.remove('flex');
       }
-      barge.classList.remove('flex');
+      if (compact) {
+        compact.classList.add('hidden');
+        compact.classList.remove('flex');
+      }
 
       const inactiveClass = "px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1";
       const activeClass = "px-2.5 py-1 rounded transition-colors bg-primary-container text-on-primary-container font-semibold flex items-center gap-1";
 
-      btnCockpit.className = inactiveClass;
-      btnBarge.className = inactiveClass;
+      if (btnCockpit) btnCockpit.className = inactiveClass;
+      if (btnBarge) btnBarge.className = inactiveClass;
       if (btnLogs) btnLogs.className = inactiveClass;
 
-      if (viewName === 'cockpit') {
-        cockpit.classList.remove('hidden');
-        btnCockpit.className = activeClass;
-      } else if (viewName === 'barge') {
-        barge.classList.remove('hidden');
-        barge.classList.add('flex');
-        btnBarge.className = activeClass;
-      } else if (viewName === 'logs' && logs) {
-        logs.classList.remove('hidden');
-        logs.classList.add('flex');
-        if (btnLogs) btnLogs.className = activeClass;
+      if (viewName === 'compact') {
+        if (compact) {
+          compact.classList.remove('hidden');
+          compact.classList.add('flex');
+        }
+        if (headerBar) headerBar.classList.add('hidden');
+        if (footerBar) footerBar.classList.add('hidden');
+      } else {
+        if (headerBar) headerBar.classList.remove('hidden');
+        if (footerBar) footerBar.classList.remove('hidden');
+        if (viewName === 'cockpit' && cockpit) {
+          cockpit.classList.remove('hidden');
+          if (btnCockpit) btnCockpit.className = activeClass;
+        } else if (viewName === 'barge' && barge) {
+          barge.classList.remove('hidden');
+          barge.classList.add('flex');
+          if (btnBarge) btnBarge.className = activeClass;
+        } else if (viewName === 'logs' && logs) {
+          logs.classList.remove('hidden');
+          logs.classList.add('flex');
+          if (btnLogs) btnLogs.className = activeClass;
+        }
+      }
+    }
+
+    function expandToFullDashboard() {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.expand_dashboard) {
+        window.pywebview.api.expand_dashboard();
+      } else {
+        switchView('cockpit');
+      }
+    }
+
+    function collapseToCompact() {
+      if (window.pywebview && window.pywebview.api && window.pywebview.api.collapse_to_compact) {
+        window.pywebview.api.collapse_to_compact();
+      } else {
+        switchView('compact');
       }
     }
 
@@ -1298,6 +1439,8 @@
       `;
       feed.insertAdjacentHTML('beforeend', html);
       feed.scrollTop = feed.scrollHeight;
+      const compactTranscript = document.getElementById('compact-transcript-text');
+      if (compactTranscript) compactTranscript.textContent = `Parth: "${text}"`;
       addConversationLogEntry({ type: 'user', text: text, time: now, badge: 'USER PROMPT' });
     }
 
@@ -1355,6 +1498,8 @@
       // Also update Barge-in screen speech buffer text
       const bargeSpeech = document.getElementById('barge-speech-text');
       if (bargeSpeech) bargeSpeech.textContent = `"${text}"`;
+      const compactTranscript = document.getElementById('compact-transcript-text');
+      if (compactTranscript) compactTranscript.textContent = `"${text}"`;
     }
 
     // State transition handler
@@ -1365,6 +1510,27 @@
       const statusPillDot = document.getElementById('status-pill-dot');
       const headerStateText = document.getElementById('header-state-text');
       const headerStateDot = document.getElementById('header-state-dot');
+
+      const compactDot = document.getElementById('compact-state-dot');
+      const compactText = document.getElementById('compact-state-text');
+      if (compactDot && compactText) {
+        if (state === 'LISTENING') {
+          compactDot.className = "w-2 h-2 rounded-full bg-secondary-fixed-dim animate-ping";
+          compactText.textContent = "HEARING USER";
+        } else if (state === 'PROCESSING') {
+          compactDot.className = "w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse";
+          compactText.textContent = "PROCESSING...";
+        } else if (state === 'SPEAKING') {
+          compactDot.className = "w-2 h-2 rounded-full bg-primary-container animate-pulse";
+          compactText.textContent = "SPEAKING";
+        } else if (state === 'INTERRUPTED') {
+          compactDot.className = "w-2 h-2 rounded-full bg-error";
+          compactText.textContent = "HALTED";
+        } else {
+          compactDot.className = "w-2 h-2 rounded-full bg-secondary-fixed-dim";
+          compactText.textContent = "STANDBY";
+        }
+      }
 
       if (state === 'LISTENING') {
         centerPillDot.className = "w-2 h-2 rounded-full bg-secondary-fixed-dim animate-ping";
@@ -1429,6 +1595,11 @@
 
     // Audio visualizer bar updater
     window.updateAudioLevel = function(level) {
+      const compactCore = document.getElementById('compact-reactor-core');
+      if (compactCore) {
+        const scale = 1 + Math.min(level * 2.2, 0.65);
+        compactCore.style.transform = `scale(${scale})`;
+      }
       const container = document.getElementById('audio-visualizer-container');
       if (!container) return;
       const bars = container.children;
@@ -1455,8 +1626,11 @@
       } else if (eventName === 'state_changed') {
         setAssistantState(data);
       } else if (eventName === 'wake_detected') {
-        // Automatically ensure the full Cockpit Dashboard is displayed on wake word
-        switchView('cockpit');
+        if (data && data.mode === 'dashboard') {
+          switchView('cockpit');
+        } else {
+          switchView('compact');
+        }
         if (typeof toggleConfigModal === 'function') {
           toggleConfigModal(false);
         }

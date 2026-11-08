@@ -37,6 +37,59 @@ class SarathiWebBridge:
         self._action_in_progress = False
         self._is_quitting = False
         self._hud_app = None
+        self.is_compact = False
+
+    def get_screen_resolution(self) -> tuple[int, int]:
+        try:
+            import ctypes
+            user32 = ctypes.windll.user32
+            user32.SetProcessDPIAware()
+            return int(user32.GetSystemMetrics(0)), int(user32.GetSystemMetrics(1))
+        except Exception:
+            return 1920, 1080
+
+    def expand_dashboard(self) -> dict[str, Any]:
+        """Expands the window to the full 1440x900 Mark VII Cockpit Dashboard."""
+        self.is_compact = False
+        if self._window:
+            try:
+                sw, sh = self.get_screen_resolution()
+                w, h = 1440, 900
+                x = max(10, (sw - w) // 2)
+                y = max(10, (sh - h) // 2)
+                self._window.resize(w, h)
+                self._window.move(x, y)
+                self._window.on_top = False
+                self._window.evaluate_js("switchView('cockpit');")
+                logger.info("Expanded to full Tactical HUD Dashboard.")
+            except Exception as e:
+                logger.warning(f"Error expanding dashboard: {e}")
+        return {"status": "ok", "mode": "dashboard"}
+
+    def collapse_to_compact(self) -> dict[str, Any]:
+        """Collapses the window into the sleek floating 3D tactical popup."""
+        self.is_compact = True
+        if self._window:
+            try:
+                sw, sh = self.get_screen_resolution()
+                w, h = 460, 320
+                x = max(10, sw - 480)
+                y = max(10, sh - 390)
+                self._window.resize(w, h)
+                self._window.move(x, y)
+                self._window.on_top = True
+                self._window.evaluate_js("switchView('compact');")
+                logger.info("Collapsed to Compact Floating 3D Widget.")
+            except Exception as e:
+                logger.warning(f"Error collapsing to compact: {e}")
+        return {"status": "ok", "mode": "compact"}
+
+    def toggle_compact_mode(self) -> dict[str, Any]:
+        """Toggles between compact floating mode and full dashboard."""
+        if getattr(self, "is_compact", False):
+            return self.expand_dashboard()
+        else:
+            return self.collapse_to_compact()
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         """Sets the active asyncio event loop."""
