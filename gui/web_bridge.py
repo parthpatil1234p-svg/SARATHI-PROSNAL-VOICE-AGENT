@@ -67,19 +67,19 @@ class SarathiWebBridge:
         return {"status": "ok", "mode": "dashboard"}
 
     def collapse_to_compact(self) -> dict[str, Any]:
-        """Collapses the window into the sleek floating 3D tactical popup."""
+        """Collapses the window into the sleek floating circular 3D voice orb."""
         self.is_compact = True
         if self._window:
             try:
                 sw, sh = self.get_screen_resolution()
-                w, h = 460, 320
-                x = max(10, sw - 480)
-                y = max(10, sh - 390)
+                w, h = 220, 220
+                x = max(10, sw - 260)
+                y = max(10, sh - 320)
                 self._window.resize(w, h)
                 self._window.move(x, y)
                 self._window.on_top = True
                 self._window.evaluate_js("switchView('compact');")
-                logger.info("Collapsed to Compact Floating 3D Widget.")
+                logger.info("Collapsed to Compact Floating Circular Voice Orb (220x220).")
             except Exception as e:
                 logger.warning(f"Error collapsing to compact: {e}")
         return {"status": "ok", "mode": "compact"}

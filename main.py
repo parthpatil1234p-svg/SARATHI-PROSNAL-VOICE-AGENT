@@ -98,11 +98,14 @@ async def main():
         return
 
     # Enforce Single-Instance Execution across Windows ("one task only one time")
-    from core.single_instance import SingleInstanceLock
-    instance_lock = SingleInstanceLock()
-    if not instance_lock.try_acquire():
-        console.print("[bold green]SARATHI is already running in background. Brought your tactical dashboard to the front.[/bold green]")
-        return
+    global active_lock
+    if active_lock is None:
+        from core.single_instance import SingleInstanceLock
+        active_lock = SingleInstanceLock()
+        if not active_lock.try_acquire():
+            console.print("[bold green]SARATHI is already running in background. Brought your tactical dashboard to the front.[/bold green]")
+            return
+    instance_lock = active_lock
 
     # If --background or --minimized passed, launch Tactical HUD silently in background
     if args.background or args.minimized:
@@ -161,8 +164,17 @@ async def main():
             await run_interactive_cli(orchestrator)
 
 
+active_lock = None
+
 if __name__ == "__main__":
+    from core.single_instance import SingleInstanceLock
+    _early_lock = SingleInstanceLock()
+    if not _early_lock.try_acquire():
+        sys.exit(0)
+    active_lock = _early_lock
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         pass
+    finally:
+        _early_lock.release()

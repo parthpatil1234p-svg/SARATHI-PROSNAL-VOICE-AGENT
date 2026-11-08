@@ -270,18 +270,27 @@ class SarathiHUDApp:
         if lock and hasattr(lock, "start_listener"):
             lock.start_listener(on_restore_callback=lambda: self._on_wake_detected())
 
-        # Create Native Windows 11 Desktop Window (1440x900 as per Mark VII specs)
-        # In background mode, starts minimized to the taskbar so the application icon is always visible
+        # Determine initial window dimensions:
+        # Defaults to the sleek compact 3D circular voice orb (220x220)
+        # positioned at bottom-right above taskbar so it never covers the user's workspace!
+        sw, sh = self.bridge.get_screen_resolution()
+        init_w, init_h = 220, 220
+        init_x = max(10, sw - 260)
+        init_y = max(10, sh - 320)
+
         self.window = webview.create_window(
             title="SARATHI // Autonomous Desktop AI Assistant",
             url=str(html_path.resolve()),
             js_api=self.bridge,
-            width=1440,
-            height=900,
-            min_size=(380, 260),
+            width=init_w,
+            height=init_h,
+            x=init_x,
+            y=init_y,
+            min_size=(180, 180),
             background_color="#0A0E14",
-            frameless=False,
+            frameless=True,
             easy_drag=True,
+            on_top=True,
             minimized=start_in_background,
             hidden=False
         )
