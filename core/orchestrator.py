@@ -251,17 +251,17 @@ class AssistantOrchestrator:
                     if chunk is not None:
                         has_speech, turn_completed, audio_bytes = self.vad.process_frame(chunk)
 
-                        # Timeout Guard 1: Cut off long continuous utterances (>6s) to ensure responsiveness
+                        # Timeout Guard 1: Cut off long continuous utterances (>8s) to ensure responsiveness
                         speech_start = getattr(self.vad, "speech_start_time", 0.0) or self.listening_start_time
-                        if self.vad.speech_started and (now_t - speech_start > 6.0):
+                        if self.vad.speech_started and (now_t - speech_start > 8.0):
                             snapshot = self.vad.get_current_audio_snapshot()
                             if snapshot:
                                 turn_completed = True
                                 audio_bytes = snapshot
                                 self.vad.reset()
 
-                        # Timeout Guard 2: No speech detected within 5 seconds of entering LISTENING
-                        if not self.vad.speech_started and (now_t - self.listening_start_time > 5.0):
+                        # Timeout Guard 2: No speech detected within 7 seconds of entering LISTENING
+                        if not self.vad.speech_started and (now_t - self.listening_start_time > 7.0):
                             console.print("[dim]Listening timeout: No audible speech detected. Returning to standby.[/dim]")
                             self.vad.reset()
                             self.state_machine.transition_to(AssistantState.IDLE)

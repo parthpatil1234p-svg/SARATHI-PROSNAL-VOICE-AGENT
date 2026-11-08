@@ -130,7 +130,7 @@ class WhisperSTT(BaseSTT):
                 transcription_coro = self._groq_client.audio.transcriptions.create(
                     file=audio_file,
                     model="whisper-large-v3-turbo",
-                    prompt="Sarathi AI assistant conversation in English or Hindi.",
+                    prompt="Sarathi, Sarthi, Parth, AI desktop assistant voice commands and questions in English, Hindi, and Hinglish.",
                     response_format="text",
                     temperature=0.0
                 )

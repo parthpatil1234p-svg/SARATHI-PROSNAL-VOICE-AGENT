@@ -62,10 +62,18 @@ class InterruptibleAudioPlayer:
     def play_numpy(self, data: np.ndarray, sample_rate: int) -> bool:
         """
         Plays numpy audio array and monitors abort_event for instant barge-in.
+        Normalizes and boosts output waveform so Sarathi speaks loudly and clearly.
         """
         with self._lock:
             self.abort_event.clear()
             self.is_playing = True
+
+        # Boost output audio to clean, punchy volume level without digital clipping
+        if len(data) > 0:
+            max_val = float(np.max(np.abs(data)))
+            if max_val > 0.02:
+                boost_factor = min(0.96 / max_val, 2.5)
+                data = np.clip(data * boost_factor, -0.99, 0.99)
 
         device = self._get_output_device()
         try:

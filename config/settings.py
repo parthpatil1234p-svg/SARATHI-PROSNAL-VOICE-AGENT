@@ -68,7 +68,7 @@ class Settings(BaseSettings):
 
     # VAD & Turn-Taking (Calibrated for high accuracy and zero false triggers)
     VOICE_ACTIVITY_THRESHOLD: float = 0.028
-    SILENCE_TIMEOUT_MS: int = 450  # 450ms natural pause before finalizing speech turn
+    SILENCE_TIMEOUT_MS: int = 800  # 800ms natural conversational pause before finalizing speech turn
 
     # Latency Optimization & Metric Flags
     ENABLE_LATENCY_METRICS: bool = True

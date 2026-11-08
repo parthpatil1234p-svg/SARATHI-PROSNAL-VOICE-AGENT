@@ -230,8 +230,8 @@ class SileroVAD(BaseVAD):
             pcm = pcm / 32768.0
 
         rms = float(np.sqrt(np.mean(pcm ** 2)))
-        # Strictly reject pure digital silence below genuine microphone noise floor
-        if rms < 0.003:
+        # Strictly reject ambient background hiss and digital silence below speech floor
+        if rms < 0.006:
             return False
 
         num_subframes = max(1, len(pcm) // self.frame_size)
