@@ -64,10 +64,18 @@ class SarathiHUDApp:
         event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
         event_bus.subscribe("wake_detected", lambda p: self._on_wake_detected())
         event_bus.subscribe("mic_mute_changed", lambda p: on_event("mic_mute_changed", p))
+        event_bus.subscribe("system_update_available", lambda p: on_event("system_update_available", p))
 
         # Start continuous voice loop by default
         self.bridge._is_voice_active = True
         self.loop.create_task(self.orchestrator.start_voice_loop())
+
+        # Start background GitHub auto-update checker
+        try:
+            from core.update_checker import desktop_update_checker
+            desktop_update_checker.start_background_checker()
+        except Exception as upd_err:
+            logger.debug(f"Update checker start note: {upd_err}")
 
         try:
             self.loop.run_forever()

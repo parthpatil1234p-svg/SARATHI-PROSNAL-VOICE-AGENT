@@ -273,6 +273,18 @@ class SarathiWebBridge:
                         tool_name="analyze_screen",
                         tool_result="Visual scan completed."
                     )
+
+                elif action_id in ("check_updates", "check_for_updates"):
+                    from core.update_checker import desktop_update_checker
+                    upd = await desktop_update_checker.check_for_updates()
+                    if upd and upd.get("has_update"):
+                        await self._orchestrator.speak_direct(
+                            f"Update available on GitHub, Parth. Commit {upd['latest_sha']}: {upd['commit_message']}."
+                        )
+                    else:
+                        await self._orchestrator.speak_direct(
+                            "SARATHI Desktop is completely up to date with the latest GitHub commit, Parth."
+                        )
             except Exception as e:
                 logger.error(f"Error executing quick action {action_id}: {e}")
             finally:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/voice_service.dart';
 import '../services/supabase_service.dart';
+import '../services/update_service.dart';
 
 class TacticalHudScreen extends StatefulWidget {
   const TacticalHudScreen({super.key});
@@ -94,6 +95,24 @@ class _TacticalHudScreenState extends State<TacticalHudScreen>
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: 'Check for Updates',
+            icon: const Icon(Icons.system_update_alt, color: Color(0xFF00F3FF), size: 20),
+            onPressed: () async {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Checking GitHub for updates...'), duration: Duration(seconds: 1)),
+              );
+              final update = await UpdateService.instance.checkForUpdates();
+              if (!context.mounted) return;
+              if (update != null) {
+                UpdateService.instance.showUpdateDialog(context, update);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('SARATHI is up to date with GitHub! (v1.0.0)'), backgroundColor: Color(0xFF002830)),
+                );
+              }
+            },
+          ),
           Container(
             margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
