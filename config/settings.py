@@ -37,8 +37,8 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = Field(default="")
     OPENAI_API_KEY: str = Field(default="")
     DEFAULT_LLM_PROVIDER: str = "groq"  # "groq" or "gemini"
-    DEFAULT_LLM_MODEL: str = "openai/gpt-oss-20b"
-    FALLBACK_LLM_MODEL: str = "qwen/qwen3.8-27b"
+    DEFAULT_LLM_MODEL: str = "qwen/qwen3.8-27b"
+    FALLBACK_LLM_MODEL: str = "openai/gpt-oss-20b"
     DEFAULT_GEMINI_MODEL: str = "gemini-flash-latest"
 
     # STT Configuration

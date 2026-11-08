@@ -104,3 +104,42 @@ def test_bridge_save_settings_persistence(bridge, tmp_path, monkeypatch):
     settings.ELEVENLABS_VOICE_ID = orig_el_vid
     settings.DEFAULT_LLM_PROVIDER = orig_llm
     settings.TTS_PROVIDER = orig_tts
+
+
+def test_bring_sarathi_window_to_front():
+    from gui.hud import bring_sarathi_window_to_front
+    # Verify execution runs safely and without exceptions
+    bring_sarathi_window_to_front("NON_EXISTENT_WINDOW_TITLE_12345")
+
+
+def test_hud_app_wake_detected(monkeypatch):
+    from gui.hud import SarathiHUDApp
+    app = SarathiHUDApp()
+
+    class MockWindow:
+        def __init__(self):
+            self.show_called = False
+            self.restore_called = False
+            self.js_calls = []
+
+        def show(self):
+            self.show_called = True
+
+        def restore(self):
+            self.restore_called = True
+
+        def focus(self):
+            pass
+
+        def evaluate_js(self, js):
+            self.js_calls.append(js)
+
+    mock_win = MockWindow()
+    app.window = mock_win
+    app.is_running = True
+
+    app._on_wake_detected()
+
+    assert mock_win.show_called is True
+    assert mock_win.restore_called is True
+    assert any("wake_detected" in js for js in mock_win.js_calls)

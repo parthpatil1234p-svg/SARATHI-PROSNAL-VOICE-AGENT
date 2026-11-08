@@ -124,7 +124,7 @@ class LLMClient:
 
         except Exception as e:
             logger.error(f"Gemini streaming error: {e}")
-            yield "Apologies, sir. I encountered a communication error with my Gemini cognitive service."
+            yield "Apologies, Parth. I encountered a temporary connection glitch with my neural core. All systems are standing by."
 
     async def _stream_groq(
         self,
@@ -135,7 +135,7 @@ class LLMClient:
     ) -> AsyncGenerator[str, None]:
         # Mark-LVI inspired Model Ladder: smoothly steps down to fast reliable fallbacks on rate-limit/error
         ladder = [self.model]
-        for fallback in ("llama-3.3-70b-versatile", "llama-3.1-8b-instant"):
+        for fallback in ("qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"):
             if fallback not in ladder:
                 ladder.append(fallback)
 
@@ -241,6 +241,8 @@ class LLMClient:
             if model_idx + 1 < len(ladder):
                 next_model = ladder[model_idx + 1]
                 logger.info(f"Stepping down model ladder: {current_model} ➔ {next_model}")
+                import asyncio
+                await asyncio.sleep(0.15)
                 async for token in self._stream_groq(memory, messages, tools, model_idx=model_idx + 1):
                     yield token
             elif self._gemini_client:
@@ -249,7 +251,7 @@ class LLMClient:
                     yield token
             else:
                 logger.error(f"Groq streaming ladder exhausted: {e}", exc_info=True)
-                yield "Apologies, sir. All cognitive processing rungs encountered an error."
+                yield "Apologies, Parth. All cognitive processing rungs encountered a temporary interruption."
 
     async def _stream_openai(
         self, memory: ConversationMemory, messages: list[dict], tools: list[dict]

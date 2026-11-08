@@ -1454,6 +1454,17 @@
         }
       } else if (eventName === 'state_changed') {
         setAssistantState(data);
+      } else if (eventName === 'wake_detected') {
+        // Automatically ensure the full Cockpit Dashboard is displayed on wake word
+        switchView('cockpit');
+        if (typeof toggleConfigModal === 'function') {
+          toggleConfigModal(false);
+        }
+        const statusPill = document.getElementById('header-state-pill');
+        if (statusPill) {
+          statusPill.classList.add('ring-2', 'ring-primary-container');
+          setTimeout(() => statusPill.classList.remove('ring-2', 'ring-primary-container'), 2500);
+        }
       } else if (eventName === 'user_speech') {
         if (data && data.text) {
           const feed = document.getElementById('transcript-feed');

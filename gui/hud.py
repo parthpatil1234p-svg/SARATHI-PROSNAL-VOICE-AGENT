@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+import sys
 import threading
 import time
 from pathlib import Path
@@ -15,6 +16,81 @@ from core.orchestrator import AssistantOrchestrator
 from gui.web_bridge import SarathiWebBridge
 
 logger = logging.getLogger("SARATHI.HUD")
+
+
+def bring_sarathi_window_to_front(window_title_keyword: str = "SARATHI"):
+    """
+    Guarantees bringing the native window to the foreground on Windows 10/11,
+    bypassing OS ForegroundLockTimeout restrictions so the full tactical HUD dashboard
+    pops to the front when 'Hey Sarathi' wake word is detected.
+    """
+    if sys.platform != "win32":
+        return
+
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        user32 = ctypes.windll.user32
+        kernel32 = ctypes.windll.kernel32
+
+        SW_RESTORE = 9
+        SW_SHOW = 5
+        SWP_NOSIZE = 0x0001
+        SWP_NOMOVE = 0x0002
+        SWP_SHOWWINDOW = 0x0040
+        HWND_TOPMOST = -1
+        HWND_NOTOPMOST = -2
+
+        hwnds = []
+
+        def enum_windows_callback(hwnd, extra):
+            if user32.IsWindow(hwnd):
+                length = user32.GetWindowTextLengthW(hwnd)
+                if length > 0:
+                    buf = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(hwnd, buf, length + 1)
+                    title = buf.value
+                    if window_title_keyword.upper() in title.upper():
+                        hwnds.append(hwnd)
+            return True
+
+        cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+        user32.EnumWindows(cb_type(enum_windows_callback), 0)
+
+        for hwnd in hwnds:
+            # 1. Unminimize if minimized to taskbar
+            if user32.IsIconic(hwnd):
+                user32.ShowWindow(hwnd, SW_RESTORE)
+            else:
+                user32.ShowWindow(hwnd, SW_SHOW)
+
+            # 2. Attach thread input to bypass OS foreground lock
+            fg_hwnd = user32.GetForegroundWindow()
+            fg_thread_id = user32.GetWindowThreadProcessId(fg_hwnd, None)
+            curr_thread_id = kernel32.GetCurrentThreadId()
+
+            if fg_thread_id != curr_thread_id and fg_thread_id != 0:
+                user32.AttachThreadInput(curr_thread_id, fg_thread_id, True)
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+                user32.AttachThreadInput(curr_thread_id, fg_thread_id, False)
+            else:
+                user32.SetForegroundWindow(hwnd)
+                user32.BringWindowToTop(hwnd)
+
+            # 3. Momentarily set TOPMOST then NOTOPMOST to force window over full-screen apps
+            user32.SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+            user32.SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW)
+
+            # 4. Virtual ALT key tap to force Windows to accept new foreground window
+            user32.keybd_event(0x12, 0, 0, 0)
+            user32.keybd_event(0x12, 0, 2, 0)
+            user32.SetForegroundWindow(hwnd)
+            user32.BringWindowToTop(hwnd)
+
+    except Exception as e:
+        logger.debug(f"Win32 bring to front error: {e}")
 
 
 class SarathiHUDApp:
@@ -62,7 +138,12 @@ class SarathiHUDApp:
         event_bus.subscribe("assistant_speech", lambda p: on_event("assistant_speech", p))
         event_bus.subscribe("tool_executed", lambda p: on_event("tool_executed", p))
         event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
-        event_bus.subscribe("wake_detected", lambda p: self._on_wake_detected())
+        def _handle_wake(payload):
+            self._on_wake_detected()
+            if self.loop and self.loop.is_running():
+                asyncio.run_coroutine_threadsafe(on_event("wake_detected", payload), self.loop)
+
+        event_bus.subscribe("wake_detected", _handle_wake)
         event_bus.subscribe("mic_mute_changed", lambda p: on_event("mic_mute_changed", p))
         event_bus.subscribe("system_update_available", lambda p: on_event("system_update_available", p))
 
@@ -83,14 +164,39 @@ class SarathiHUDApp:
             self.loop.close()
 
     def _on_wake_detected(self):
-        """Restores and shows the tactical HUD window if hidden when Sarathi wakes up."""
-        if self.window and self.is_running:
-            try:
-                self.window.show()
-                self.window.restore()
-                logger.info("Tactical HUD window restored on wake detection.")
-            except Exception as e:
-                logger.debug(f"Window restore error: {e}")
+        """
+        Restores and brings the full tactical HUD dashboard window to the foreground
+        when 'Hey Sarathi' wake word is detected or secondary instance requests focus.
+        """
+        if not self.is_running:
+            return
+
+        try:
+            # 1. Pywebview native restore and show
+            if self.window:
+                try:
+                    self.window.show()
+                    self.window.restore()
+                    if hasattr(self.window, "focus"):
+                        self.window.focus()
+                except Exception as pw_err:
+                    logger.debug(f"Pywebview restore attempt: {pw_err}")
+
+            # 2. Native Win32 foreground activation (unminimizes and pops to front of all apps)
+            bring_sarathi_window_to_front("SARATHI")
+
+            # 3. Ensure Web UI switches to full Cockpit dashboard view
+            if self.window:
+                try:
+                    self.window.evaluate_js(
+                        "if (window.onSarathiEvent) window.onSarathiEvent('wake_detected', {});"
+                    )
+                except Exception:
+                    pass
+
+            logger.info("Tactical HUD full dashboard restored and brought to foreground on wake detection.")
+        except Exception as e:
+            logger.debug(f"Window restore error: {e}")
 
     def _on_window_closing(self):
         """Handles clean application shutdown when the window close button is pressed."""
