@@ -153,3 +153,32 @@ def purge_system_cache() -> str:
     except Exception as e:
         return f"Cache purge subroutine encountered: {e}"
 
+
+@register_tool(
+    name="remember_user_fact",
+    description="Permanently saves a fact, personal detail, instruction, or preference provided by Parth into the non-losable SQLite database so it is never forgotten."
+)
+def remember_user_fact(key: str, value: str, category: str = "general") -> str:
+    """Saves a fact into permanent cross-session storage."""
+    from core.persistent_memory import memory_db
+    memory_db.set_user_fact(key, value, category=category)
+    return f"I have permanently stored that {key}: '{value}', Parth. I won't forget it."
+
+
+@register_tool(
+    name="recall_memories",
+    description="Retrieves permanent memories, user facts, preferences, and behavioral rules stored in the non-losable SQLite database."
+)
+def recall_memories(query: str = "") -> dict:
+    """Recalls all persistent facts and behavioral guidelines."""
+    from core.persistent_memory import memory_db
+    facts = memory_db.get_all_facts()
+    rules = memory_db.get_active_rules()
+    return {
+        "status": "success",
+        "user_facts": facts,
+        "behavioral_rules": rules,
+        "query": query
+    }
+
+

@@ -120,7 +120,7 @@ class SarathiHUDApp:
 
             time.sleep(0.03)
 
-    def launch(self):
+    def launch(self, start_in_background: bool = False):
         """Launches the Mark VII Tactical HUD Window."""
         html_path = BASE_DIR / "gui" / "web" / "index.html"
         if not html_path.exists():
@@ -143,10 +143,14 @@ class SarathiHUDApp:
             min_size=(1024, 700),
             background_color="#0A0E14",
             frameless=False,
-            easy_drag=True
+            easy_drag=True,
+            hidden=start_in_background
         )
         self.bridge.set_window(self.window)
         self.window.events.closing += self._on_window_closing
+
+        if start_in_background:
+            logger.info("SARATHI started in background mode. Silently listening for 'Hey Sarathi'.")
 
         # Starts the native WebView2 message loop on the main thread (blocking until closed)
         webview.start(debug=False)
@@ -158,10 +162,10 @@ class SarathiHUDApp:
 JarvisHUDApp = SarathiHUDApp
 
 
-def run_tactical_hud():
+def run_tactical_hud(background: bool = False):
     """Entry point to launch the tactical desktop HUD."""
     app = SarathiHUDApp()
-    app.launch()
+    app.launch(start_in_background=background)
 
 
 if __name__ == "__main__":

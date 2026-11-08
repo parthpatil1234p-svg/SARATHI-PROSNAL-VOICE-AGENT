@@ -46,18 +46,23 @@ class SarathiWebBridge:
         self._window = window
 
     def get_conversation_history(self) -> list[dict[str, Any]]:
-        """Returns chronological conversation history from orchestrator memory."""
-        res: list[dict[str, Any]] = []
-        if hasattr(self._orchestrator, "memory") and self._orchestrator.memory:
-            for m in self._orchestrator.memory.get_messages():
-                role = m.get("role", "")
-                if role != "system":
-                    res.append({
-                        "role": role,
-                        "content": m.get("content", ""),
-                        "time": time.strftime("%H:%M:%S")
-                    })
-        return res
+        """Returns chronological conversation history from persistent SQLite memory."""
+        try:
+            from core.persistent_memory import memory_db
+            return memory_db.get_recent_history(limit=50)
+        except Exception as e:
+            logger.debug(f"Fallback to memory buffer history: {e}")
+            res: list[dict[str, Any]] = []
+            if hasattr(self._orchestrator, "memory") and self._orchestrator.memory:
+                for m in self._orchestrator.memory.get_messages():
+                    role = m.get("role", "")
+                    if role != "system":
+                        res.append({
+                            "role": role,
+                            "content": m.get("content", ""),
+                            "time": time.strftime("%H:%M:%S")
+                        })
+            return res
 
     # -------------------------------------------------------------
     # Window Controls (Minimize, Maximize, Hide to Background, Power Off)
@@ -69,6 +74,15 @@ class SarathiWebBridge:
                 self._window.minimize()
             except Exception as e:
                 logger.warning(f"Window minimize error: {e}")
+
+    def hide_to_background(self):
+        """Hides the HUD window to run silently in the background while keeping voice listener active."""
+        if self._window:
+            try:
+                self._window.hide()
+                logger.info("SARATHI HUD hidden to background. Listening for 'Hey Sarathi'.")
+            except Exception as e:
+                logger.warning(f"Window hide error: {e}")
 
     def maximize_window(self):
         """Toggles maximize/restore state."""

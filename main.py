@@ -82,6 +82,8 @@ async def run_interactive_cli(orchestrator: AssistantOrchestrator):
 async def main():
     parser = argparse.ArgumentParser(description="S.A.R.A.T.H.I. AI Voice Assistant")
     parser.add_argument("--gui", "--hud", action="store_true", help="Launch the Mark VII Tactical Desktop HUD")
+    parser.add_argument("--background", action="store_true", help="Launch silently in background, wake up on 'Hey Sarathi'")
+    parser.add_argument("--minimized", action="store_true", help="Launch minimized in background, wake up on 'Hey Sarathi'")
     parser.add_argument("--tk", action="store_true", help="Launch the CustomTkinter GUI instead of the Web HUD")
     parser.add_argument("--cli", action="store_true", help="Run in interactive CLI mode (Type prompt, hear voice)")
     parser.add_argument("--voice", action="store_true", help="Run headless in continuous background voice mode")
@@ -95,11 +97,21 @@ async def main():
         run_gui()
         return
 
+    # If --background or --minimized passed, launch Tactical HUD silently in background
+    if args.background or args.minimized:
+        try:
+            from gui.hud import run_tactical_hud
+            run_tactical_hud(background=True)
+            return
+        except Exception as e:
+            console.print(f"[yellow]Background HUD start error: {e}. Running headless voice loop.[/yellow]")
+            args.voice = True
+
     # If --gui/--hud or no arguments passed, launch the Mark VII Tactical Desktop HUD
     if args.gui or (not args.cli and not args.voice and not args.devices and not args.tools):
         try:
             from gui.hud import run_tactical_hud
-            run_tactical_hud()
+            run_tactical_hud(background=False)
             return
         except Exception as e:
             console.print(f"[yellow]Tactical HUD encountered: {e}. Falling back to standard Tkinter GUI.[/yellow]")

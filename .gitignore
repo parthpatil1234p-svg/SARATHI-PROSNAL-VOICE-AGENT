@@ -59,3 +59,12 @@ assets/models/*.onnx
 
 # Graft
 graft/
+
+# Databases & Runtime Logs
+*.db
+*.sqlite
+*.sqlite3
+*.log
+sarathi_memory.db*
+.sarathi_backup/
+

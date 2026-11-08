@@ -73,6 +73,10 @@ hidden_imports = [
     "faster_whisper",
     "ctranslate2",
     "unittest",
+    "sqlite3",
+    "winreg",
+    "core.persistent_memory",
+    "core.system_startup",
 ]
 
 # Add any additional submodules
