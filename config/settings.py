@@ -66,9 +66,9 @@ class Settings(BaseSettings):
     AUDIO_INPUT_DEVICE_INDEX: str | None = None
     AUDIO_OUTPUT_DEVICE_INDEX: str | None = None
 
-    # VAD & Turn-Taking (Calibrated for high accuracy and zero false triggers)
+    # VAD & Turn-Taking (Calibrated for high accuracy and natural conversational pauses)
     VOICE_ACTIVITY_THRESHOLD: float = 0.028
-    SILENCE_TIMEOUT_MS: int = 800  # 800ms natural conversational pause before finalizing speech turn
+    SILENCE_TIMEOUT_MS: int = 1400  # 1400ms natural conversational pause allowing multi-clause thoughts without cutoffs
 
     # Latency Optimization & Metric Flags
     ENABLE_LATENCY_METRICS: bool = True

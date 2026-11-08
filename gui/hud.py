@@ -199,14 +199,27 @@ class SarathiHUDApp:
             logger.debug(f"Window restore error: {e}")
 
     def _on_window_closing(self):
-        """Handles clean application shutdown when the window close button is pressed."""
-        self.is_running = False
+        """
+        Intercepts window close: hides to background resident mode instead of killing the process.
+        Returns False so pywebview cancels window destruction, keeping SARATHI's background
+        audio stream and wake word listener active 24/7.
+        """
+        if getattr(self, "_force_quit", False):
+            self.is_running = False
+            try:
+                self.orchestrator.stop()
+                logger.info("SARATHI HUD closed cleanly (force quit).")
+            except Exception as e:
+                logger.debug(f"Shutdown error on closing: {e}")
+            return True
+
+        logger.info("Window close intercepted: Hiding to background resident mode. Silently listening for 'Hey Sarathi'.")
         try:
-            self.orchestrator.stop()
-            logger.info("SARATHI HUD closed cleanly.")
+            if self.window:
+                self.window.hide()
         except Exception as e:
-            logger.debug(f"Shutdown error on closing: {e}")
-        return True
+            logger.debug(f"Window hide error: {e}")
+        return False
 
     def _telemetry_ticker(self):
         """Pushes system diagnostics and real-time audio levels to the HUD."""
@@ -268,6 +281,8 @@ class SarathiHUDApp:
             hidden=False
         )
         self.bridge.set_window(self.window)
+        if hasattr(self.bridge, "set_hud_app"):
+            self.bridge.set_hud_app(self)
         self.window.events.closing += self._on_window_closing
 
         if start_in_background:

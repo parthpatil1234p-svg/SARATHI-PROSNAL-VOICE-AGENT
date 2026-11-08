@@ -6,6 +6,8 @@ import sys
 import time
 from typing import Any
 
+import numpy as np
+
 # Ensure UTF-8 output on Windows consoles
 if sys.platform == "win32":
     try:
@@ -311,13 +313,31 @@ class AssistantOrchestrator:
                                 speculative_task=spec_task
                             )
 
-                # 3. State: SPEAKING - Drain microphone buffer so speaker output is not captured as user speech
+                # 3. State: SPEAKING - Monitor microphone for barge-in (user speaking to interrupt or add more)
                 elif self.state_machine.current_state == AssistantState.SPEAKING:
-                    while not self.audio_stream.audio_queue.empty():
-                        try:
-                            self.audio_stream.audio_queue.get_nowait()
-                        except Exception:
-                            break
+                    chunk = self.audio_stream.read_chunk(timeout=0.04)
+                    if chunk is not None:
+                        # Check acoustic energy to distinguish real user voice from speaker bleed
+                        if chunk.dtype == np.int16:
+                            audio_norm = chunk.astype(np.float32) / 32768.0
+                        else:
+                            audio_norm = chunk.astype(np.float32)
+                        rms = float(np.sqrt(np.mean(audio_norm ** 2)))
+
+                        # Active user voice near mic is typically >0.038 RMS
+                        if rms > 0.038:
+                            has_speech, _, _ = self.idle_vad.process_frame(chunk)
+                            if has_speech:
+                                console.print("[bold yellow][BARGE-IN] User speech detected during playback. Pausing SARATHI immediately.[/bold yellow]")
+                                self.player.interrupt()
+                                self.state_machine.transition_to(AssistantState.INTERRUPTED)
+                                await event_bus.publish("barge_in", {})
+                                self.vad.reset()
+                                self.idle_vad.reset()
+                                self.active_conversation_timeout = time.time() + 15.0
+                                self.state_machine.transition_to(AssistantState.LISTENING)
+                                self.listening_start_time = time.time()
+                                continue
 
                 await asyncio.sleep(0.005)
 
@@ -581,13 +601,12 @@ class AssistantOrchestrator:
                         try:
                             audio_bytes = await self.tts.synthesize(sentence)
                         except Exception as tts_err:
-                            logger.warning(f"TTS synthesis failed ({tts_err}), falling back to local SAPI...")
+                            logger.warning(f"TTS synthesis attempt 1 failed ({tts_err}), retrying...")
                             try:
-                                from voice.tts.sapi_tts import SapiTTSClient
-                                sapi = SapiTTSClient()
-                                audio_bytes = await sapi.synthesize(sentence)
-                            except Exception as sapi_err:
-                                logger.error(f"SAPI fallback error: {sapi_err}")
+                                await asyncio.sleep(0.12)
+                                audio_bytes = await self.tts.synthesize(sentence)
+                            except Exception as retry_err:
+                                logger.error(f"TTS synthesis retry failed ({retry_err})")
                                 audio_bytes = b""
                         if first_synth and tracker:
                             tracker.mark_tts_first_audio()
@@ -715,13 +734,12 @@ class AssistantOrchestrator:
         try:
             audio_bytes = await self.tts.synthesize(text)
         except Exception as tts_err:
-            logger.warning(f"Direct TTS synthesis failed ({tts_err}), falling back to local SAPI...")
+            logger.warning(f"Direct TTS synthesis attempt 1 failed ({tts_err}), retrying...")
             try:
-                from voice.tts.sapi_tts import SapiTTSClient
-                sapi = SapiTTSClient()
-                audio_bytes = await sapi.synthesize(text)
-            except Exception as sapi_err:
-                logger.error(f"SAPI direct fallback error: {sapi_err}")
+                await asyncio.sleep(0.12)
+                audio_bytes = await self.tts.synthesize(text)
+            except Exception as retry_err:
+                logger.error(f"Direct TTS retry failed: {retry_err}")
                 audio_bytes = b""
         if tracker:
             tracker.mark_tts_first_audio()

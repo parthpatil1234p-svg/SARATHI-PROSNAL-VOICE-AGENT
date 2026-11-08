@@ -36,6 +36,7 @@ class SarathiWebBridge:
         self._is_mic_muted = False
         self._action_in_progress = False
         self._is_quitting = False
+        self._hud_app = None
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         """Sets the active asyncio event loop."""
@@ -44,6 +45,10 @@ class SarathiWebBridge:
     def set_window(self, window):
         """Sets the pywebview window instance."""
         self._window = window
+
+    def set_hud_app(self, app):
+        """Sets the parent HUD application instance."""
+        self._hud_app = app
 
     def get_conversation_history(self) -> list[dict[str, Any]]:
         """Returns chronological conversation history from persistent SQLite memory."""
@@ -98,12 +103,14 @@ class SarathiWebBridge:
                 logger.warning(f"Window maximize/restore error: {e}")
 
     def close_window(self):
-        """Closes the HUD window cleanly."""
-        self.power_off()
+        """Hides the HUD window to background resident mode so 'Hey Sarathi' stays active."""
+        self.hide_to_background()
 
     def power_off(self):
         """Fully terminates the application and background listener."""
         self._is_quitting = True
+        if self._hud_app:
+            self._hud_app._force_quit = True
         logger.info("Powering down SARATHI completely.")
         if self._window:
             try:
