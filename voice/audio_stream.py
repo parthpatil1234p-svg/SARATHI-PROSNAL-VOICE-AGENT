@@ -42,15 +42,21 @@ class AudioInputStream:
         if not self.is_running:
             return
 
+        from config.settings import settings
+
+        # Apply software pre-amp boost for clear, sensitive microphone audio
+        gain = getattr(settings, "MIC_INPUT_GAIN", 2.5)
+        boosted = np.clip(indata * gain, -1.0, 1.0)
+
         try:
-            rms = float(np.sqrt(np.mean(indata ** 2)))
+            rms = float(np.sqrt(np.mean(boosted ** 2)))
             self.latest_rms = rms
             self.latest_level = max(0, min(100, int(rms * 450)))
         except Exception:
             pass
 
-        # Clone and convert to 16-bit PCM integer or float array
-        pcm_chunk = (indata.copy() * 32767).astype(np.int16)
+        # Clone and convert to 16-bit PCM integer
+        pcm_chunk = (boosted.copy() * 32767).astype(np.int16)
         try:
             self.audio_queue.put_nowait(pcm_chunk)
         except queue.Full:

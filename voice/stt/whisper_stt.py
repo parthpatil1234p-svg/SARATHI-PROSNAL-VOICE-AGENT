@@ -42,12 +42,24 @@ class WhisperSTT(BaseSTT):
         else:
             self._groq_client = None
 
+    def _normalize_speech_peak(self, samples: np.ndarray, target_peak: float = 0.85) -> np.ndarray:
+        """Normalizes vocal waveform peak so Whisper hears loud, crisp, articulate speech."""
+        if len(samples) == 0:
+            return samples
+        float_samples = samples.astype(np.float32)
+        max_amp = float(np.max(np.abs(float_samples)))
+        if max_amp > 80.0:
+            gain = (32767.0 * target_peak) / max_amp
+            gain = min(max(gain, 1.0), 6.0)  # Bounded gain between 1.0x and 6.0x
+            return np.clip(float_samples * gain, -32768, 32767).astype(np.int16)
+        return samples
+
     def _trim_trailing_silence(
         self,
         samples: np.ndarray,
         sample_rate: int = 16000,
-        keep_padding_ms: int = 100,
-        threshold: float = 0.015
+        keep_padding_ms: int = 180,
+        threshold: float = 0.003
     ) -> np.ndarray:
         """
         Trims trailing dead air while preserving speech and final consonants.
@@ -72,13 +84,15 @@ class WhisperSTT(BaseSTT):
         return samples[:cutoff]
 
     def _get_wav_bytes(self, audio_bytes: bytes, sample_rate: int = 16000) -> io.BytesIO:
-        """Encodes raw PCM bytes into an in-memory WAV file."""
+        """Encodes raw PCM bytes into an in-memory WAV file with peak normalization."""
+        samples = np.frombuffer(audio_bytes, dtype=np.int16)
+        normalized = self._normalize_speech_peak(samples)
         wav_io = io.BytesIO()
         with wave.open(wav_io, "wb") as wav_file:
             wav_file.setnchannels(1)
             wav_file.setsampwidth(2)  # 16-bit
             wav_file.setframerate(sample_rate)
-            wav_file.writeframes(audio_bytes)
+            wav_file.writeframes(normalized.tobytes())
         wav_io.seek(0)
         wav_io.name = "speech.wav"
         return wav_io
@@ -86,15 +100,15 @@ class WhisperSTT(BaseSTT):
     def _get_audio_payload(self, audio_bytes: bytes, sample_rate: int = 16000) -> io.BytesIO:
         """
         Prepares audio payload for STT upload.
-        If ENABLE_FLAC_COMPRESSION is True, trims trailing silence and compresses to 16kHz mono FLAC (~50% size reduction).
-        Otherwise falls back to standard uncompressed WAV.
+        Normalizes peak, trims trailing silence, and compresses to 16kHz mono FLAC.
         """
         if not settings.ENABLE_FLAC_COMPRESSION:
             return self._get_wav_bytes(audio_bytes, sample_rate)
 
         try:
-            samples = np.frombuffer(audio_bytes, dtype=np.int16)
-            trimmed_samples = self._trim_trailing_silence(samples, sample_rate=sample_rate)
+            raw_samples = np.frombuffer(audio_bytes, dtype=np.int16)
+            normalized_samples = self._normalize_speech_peak(raw_samples)
+            trimmed_samples = self._trim_trailing_silence(normalized_samples, sample_rate=sample_rate)
 
             flac_io = io.BytesIO()
             sf.write(flac_io, trimmed_samples, sample_rate, format="FLAC", subtype="PCM_16")

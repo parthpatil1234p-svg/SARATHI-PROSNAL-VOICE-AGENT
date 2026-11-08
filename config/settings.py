@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     SAMPLE_RATE: int = 16000
     CHANNELS: int = 1
     CHUNK_SIZE: int = 1280  # 80ms chunk at 16kHz
+    MIC_INPUT_GAIN: float = 2.5  # Software pre-amp boost for laptop / quiet microphones
     AUDIO_INPUT_DEVICE_INDEX: str | None = None
     AUDIO_OUTPUT_DEVICE_INDEX: str | None = None
 

@@ -150,4 +150,8 @@ def check_fast_path(user_text: str) -> FastPathResult:
         spoken = f"All systems are operational and running at peak performance, sir. How can I assist you?"
         return FastPathResult(True, spoken, "assistant_status", {"status": "nominal"})
 
+    if any(q in cleaned for q in ("kiske api", "which api", "whose api", "what api", "konse api", "kaunse api", "what model are you")):
+        spoken = "Main Groq Cloud API pe run kar raha hoon, powered by Groq's high-speed LPU inference engine."
+        return FastPathResult(True, spoken, "api_identity", {"provider": "groq", "api": "Groq Cloud API"})
+
     return FastPathResult(False)

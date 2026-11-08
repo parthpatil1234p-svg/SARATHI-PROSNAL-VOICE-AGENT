@@ -150,7 +150,7 @@ class SileroVAD(BaseVAD):
         self,
         model_path: Path | str | None = None,
         silence_timeout_ms: int | None = None,
-        speech_threshold: float = 0.18,
+        speech_threshold: float = 0.16,
         preroll_ms: int = 200,
         min_speech_duration_sec: float = 0.20,
         sample_rate: int = 16000
@@ -230,8 +230,8 @@ class SileroVAD(BaseVAD):
             pcm = pcm / 32768.0
 
         rms = float(np.sqrt(np.mean(pcm ** 2)))
-        # Strictly reject digital silence and sub-noise ambient floor
-        if rms < 0.010:
+        # Strictly reject pure digital silence below genuine microphone noise floor
+        if rms < 0.003:
             return False
 
         num_subframes = max(1, len(pcm) // self.frame_size)
@@ -245,7 +245,7 @@ class SileroVAD(BaseVAD):
 
         # Hybrid check: neural probability OR clear vocal acoustic energy
         neural_speech = max(probs) >= self.speech_threshold
-        energy_speech = rms >= 0.035
+        energy_speech = rms >= 0.025
         return neural_speech or energy_speech
 
     def process_frame(self, chunk: np.ndarray) -> tuple[bool, bool, bytes | None]:
