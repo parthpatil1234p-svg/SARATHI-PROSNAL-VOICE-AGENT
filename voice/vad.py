@@ -274,7 +274,7 @@ class SileroVAD(BaseVAD):
                         split_gap = current_time - self.last_cut_time
                         if split_gap < 1.0:
                             logger.warning(
-                                f"⚠️ [Split Turn Detected] User speech resumed {split_gap * 1000:.1f}ms after cut (gap < 1.0s)."
+                                f"[Split Turn Detected] User speech resumed {split_gap * 1000:.1f}ms after cut (gap < 1.0s)."
                             )
 
                     # Prepend ~200ms pre-roll so initial syllable / consonant is never clipped

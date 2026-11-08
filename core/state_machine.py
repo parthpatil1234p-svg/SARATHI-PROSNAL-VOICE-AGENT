@@ -43,7 +43,7 @@ class StateMachine:
                 return False
 
             self._state = new_state
-            logger.info(f"State Transition: [{old_state.name}] ➔ [{new_state.name}]")
+            logger.info(f"State Transition: [{old_state.name}] -> [{new_state.name}]")
 
         # Notify listeners outside the lock to avoid deadlocks
         for listener in self._listeners:

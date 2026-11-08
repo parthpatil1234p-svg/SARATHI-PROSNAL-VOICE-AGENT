@@ -112,5 +112,8 @@ class TurnLatencyTracker:
         table.add_row("5. tts_first_audio", f"{deltas['tts_synth']:.1f} ms", f"{m['tts_first_audio'] or 0.0:.1f} ms", "First audio chunk synthesized")
         table.add_row("6. playback_start", f"{deltas['playback_init']:.1f} ms", f"{m['playback_start'] or 0.0:.1f} ms", "Speaker hardware audio begins")
 
-        console.print(table)
-        console.print(f"[bold green]▶ TOTAL E2E LATENCY (End-of-Speech ➔ Audio Out): {m['total_e2e_ms']:.1f} ms[/bold green]\n")
+        try:
+            console.print(table)
+            console.print(f"[bold green]> TOTAL E2E LATENCY (End-of-Speech -> Audio Out): {m['total_e2e_ms']:.1f} ms[/bold green]\n")
+        except Exception:
+            pass

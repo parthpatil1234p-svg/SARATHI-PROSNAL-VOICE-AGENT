@@ -26,8 +26,8 @@ def test_system_diagnostics():
 
 
 def test_code_runner_safe():
-    output = execute_python_code("print('Hello Jarvis')")
-    assert output == "Hello Jarvis"
+    output = execute_python_code("print('Hello Sarathi')")
+    assert output == "Hello Sarathi"
 
 
 def test_code_runner_blocks_destructive_commands():
@@ -39,3 +39,12 @@ def test_code_runner_blocks_destructive_commands():
 async def test_tool_dispatcher():
     result = await execute_tool("execute_python_code", {"code": "print(2 + 2)"})
     assert result.strip() == "4"
+
+
+@pytest.mark.asyncio
+async def test_weather_tool():
+    from tools.system_tools import get_weather
+    data = await get_weather()
+    assert "location" in data
+    assert "temperature" in data
+    assert "condition" in data

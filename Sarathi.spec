@@ -72,6 +72,7 @@ hidden_imports = [
     "win32com.client",
     "faster_whisper",
     "ctranslate2",
+    "unittest",
 ]
 
 # Add any additional submodules
@@ -89,7 +90,7 @@ a = Analysis(
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=["tkinter.test", "unittest"],
+    excludes=["tkinter.test"],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,

@@ -162,8 +162,15 @@ class SarathiWebBridge:
                 self._orchestrator.active_conversation_timeout = time.time() + 15.0
                 self._orchestrator.state_machine.transition_to(AssistantState.WAKE_DETECTED)
                 await self._orchestrator._play_wake_chime()
-                self._orchestrator.state_machine.transition_to(AssistantState.LISTENING)
+                # Ensure microphone buffer is drained so wake cue is not recorded as speech
+                await asyncio.sleep(0.3)
+                while not self._orchestrator.audio_stream.audio_queue.empty():
+                    try:
+                        self._orchestrator.audio_stream.audio_queue.get_nowait()
+                    except Exception:
+                        break
                 self._orchestrator.vad.reset()
+                self._orchestrator.state_machine.transition_to(AssistantState.LISTENING)
 
             asyncio.run_coroutine_threadsafe(_wake_coro(), self._loop)
             logger.info("Manual wake pulse triggered via HUD mic.")
@@ -239,7 +246,7 @@ class SarathiWebBridge:
                     )
 
                 elif action_id == "screenshot":
-                    res = analyze_screen(query="Analyze the current display and provide an executive summary.")
+                    res = await analyze_screen(prompt="Analyze the current display and provide an executive summary.")
                     await self._orchestrator.speak_direct(
                         text=res,
                         tool_name="analyze_screen",

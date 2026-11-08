@@ -32,7 +32,40 @@ from voice.vad import VoiceActivityDetector
 from voice.wake_word import WakeWordDetector
 
 logger = logging.getLogger("SARATHI.Orchestrator")
-console = Console(force_terminal=True, legacy_windows=False)
+
+
+class SafeConsole:
+    """Safe wrapper for Rich Console that never crashes on Windows encodings or redirected stdout."""
+
+    def __init__(self):
+        try:
+            self._console = Console(force_terminal=False, soft_wrap=True)
+        except Exception:
+            self._console = None
+
+    def print(self, *args, **kwargs):
+        try:
+            if self._console:
+                self._console.print(*args, **kwargs)
+            else:
+                print(*args)
+        except Exception:
+            try:
+                clean_args = []
+                for a in args:
+                    if isinstance(a, str):
+                        clean_args.append(a.encode("ascii", "replace").decode("ascii"))
+                    else:
+                        clean_args.append(a)
+                if self._console:
+                    self._console.print(*clean_args, **kwargs)
+                else:
+                    print(*clean_args)
+            except Exception:
+                pass
+
+
+console = SafeConsole()
 
 
 class AssistantOrchestrator:
@@ -88,7 +121,7 @@ class AssistantOrchestrator:
         """Main asynchronous event loop for real-time voice interaction."""
         self.is_running = True
         self.audio_stream.start()
-        console.print(f"[bold cyan]⚡ {settings.ASSISTANT_NAME} initialized and listening...[/bold cyan]")
+        console.print(f"[bold cyan][SARATHI] {settings.ASSISTANT_NAME} initialized and listening...[/bold cyan]")
 
         # Warm persistent connections in background if enabled
         if settings.ENABLE_PERSISTENT_HTTP_CLIENT:
@@ -107,7 +140,7 @@ class AssistantOrchestrator:
 
         # Spoken confirmation that audio output is operational
         try:
-            greeting_text = "All systems online, sir. Sārathi is at your command."
+            greeting_text = f"All systems online, {settings.USER_NAME}. Sārathi is at your command."
             self.last_spoken_text = greeting_text
             self.last_spoken_time = time.time()
             greeting = await self.tts.synthesize(greeting_text)
@@ -148,7 +181,7 @@ class AssistantOrchestrator:
                             if self.vad.speech_started:
                                 self.state_machine.transition_to(AssistantState.LISTENING)
                                 if turn_completed and audio_bytes:
-                                    console.print("[dim]🎤 Speech turn completed. Transcribing...[/dim]")
+                                    console.print("[dim][VOICE] Speech turn completed. Transcribing...[/dim]")
                                     last_voice_t = self.vad.last_voice_timestamp
                                     vad_fire_t = time.time()
                                     self.state_machine.transition_to(AssistantState.PROCESSING)
@@ -161,7 +194,7 @@ class AssistantOrchestrator:
 
                         # Fast-path B: OpenWakeWord acoustic model trigger
                         if self.wake_detector.process_chunk(chunk):
-                            console.print("[bold green]🔔 OpenWakeWord trigger detected![/bold green]")
+                            console.print("[bold green][WAKE] OpenWakeWord trigger detected![/bold green]")
                             self.active_conversation_timeout = time.time() + 15.0
                             self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
                             await event_bus.publish("wake_detected", {})
@@ -183,7 +216,7 @@ class AssistantOrchestrator:
                                 )
                                 matched_wake = any(kw in cleaned for kw in wake_keywords)
                                 if matched_wake:
-                                    console.print(f"[bold green]🔔 Wake word matched: '{transcript}'[/bold green]")
+                                    console.print(f"[bold green][WAKE] Wake word matched: '{transcript}'[/bold green]")
                                     self.active_conversation_timeout = time.time() + 15.0
                                     self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
                                     await event_bus.publish("wake_detected", {"transcript": transcript})
@@ -243,7 +276,7 @@ class AssistantOrchestrator:
                                     self.speculative_triggered_this_turn = True
                                     self.speculative_call_count += 1
                                     logger.info(
-                                        f"🚀 [Speculative STT] Initiating early transcription at {silence_sec*1000:.0f}ms silence "
+                                        f"[Speculative STT] Initiating early transcription at {silence_sec*1000:.0f}ms silence "
                                         f"(Total Calls: {self.speculative_call_count}, Hits: {self.speculative_hit_count})"
                                     )
                                     self.speculative_stt_task = asyncio.create_task(
@@ -257,12 +290,12 @@ class AssistantOrchestrator:
                             self.speculative_stt_task = None
                             self.speculative_discard_count += 1
                             logger.info(
-                                f"🗑️ [Speculative STT] Speech resumed before cutoff. Discarded speculative call "
+                                f"[Speculative STT] Speech resumed before cutoff. Discarded speculative call "
                                 f"(Total Discards: {self.speculative_discard_count})"
                             )
 
                         if turn_completed and audio_bytes:
-                            console.print("[dim]🎤 Speech turn completed. Transcribing...[/dim]")
+                            console.print("[dim][VOICE] Speech turn completed. Transcribing...[/dim]")
                             last_voice_t = self.vad.last_voice_timestamp
                             vad_fire_t = time.time()
                             spec_task = self.speculative_stt_task
@@ -322,7 +355,7 @@ class AssistantOrchestrator:
                     transcript = await speculative_task
                     self.speculative_hit_count += 1
                     logger.info(
-                        f"🎯 [Speculative STT Hit] Used early speculative transcription! "
+                        f"[Speculative STT Hit] Used early speculative transcription! "
                         f"(Total Hits: {self.speculative_hit_count})"
                     )
                 except asyncio.CancelledError:
@@ -362,7 +395,7 @@ class AssistantOrchestrator:
                 overlap_ratio = len(overlap) / max(len(clean_words), 1)
 
                 if (cleaned == recent_lower or overlap_ratio >= 0.75) and len(clean_words) >= 3:
-                    console.print(f"[dim yellow]🛡️ Acoustic self-echo suppressed ({overlap_ratio:.0%} match): '{transcript}'[/dim yellow]")
+                    console.print(f"[dim yellow][ECHO-GUARD] Acoustic self-echo suppressed ({overlap_ratio:.0%} match): '{transcript}'[/dim yellow]")
                     self.state_machine.transition_to(AssistantState.IDLE)
                     return
 
@@ -394,7 +427,7 @@ class AssistantOrchestrator:
             # Check for direct shutdown / exit commands
             cleaned_cmd = effective_text.lower().strip().rstrip(".,!?")
             if any(term in cleaned_cmd for term in ("shut down", "power off", "shutdown", "exit sarathi", "sarathi exit", "sarathi quit")):
-                console.print("[bold red]🛑 Voice shutdown command received.[/bold red]")
+                console.print("[bold red][STOP] Voice shutdown command received.[/bold red]")
                 audio_started_event.set()
                 await self.speak_direct("Shutting down systems. Goodbye, sir.")
                 await asyncio.sleep(0.4)
@@ -548,7 +581,7 @@ class AssistantOrchestrator:
                         gap_ms = (now - last_clause_end_time) * 1000
                         if gap_ms > 150.0:
                             logger.warning(
-                                f"⚠️ [Clause Gap Exceeded] Inter-clause gap was {gap_ms:.1f}ms (>150ms) before clause: '{sentence[:30]}...'"
+                                f"[Clause Gap Exceeded] Inter-clause gap was {gap_ms:.1f}ms (>150ms) before clause: '{sentence[:30]}...'"
                             )
                         else:
                             logger.debug(f"Inter-clause playback gap: {gap_ms:.1f}ms")
@@ -678,8 +711,8 @@ class AssistantOrchestrator:
     async def _play_wake_chime(self):
         """Synthesizes or plays an acoustic activation cue."""
         try:
-            cue = "Yes, sir?"
-            self.last_spoken_text = ""
+            cue = f"Yes, {settings.USER_NAME}?"
+            self.last_spoken_text = cue
             self.last_spoken_time = time.time()
             audio = await self.tts.synthesize(cue)
             player.play_bytes(audio)

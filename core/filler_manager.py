@@ -110,7 +110,7 @@ class FillerManager:
                 return False
 
             self._is_playing_filler = True
-            logger.info("⚡ [Early Filler] Playing acknowledgement clip (700ms latency threshold reached).")
+            logger.info("[Early Filler] Playing acknowledgement clip (700ms latency threshold reached).")
             try:
                 await asyncio.to_thread(player.play_bytes, filler_bytes)
                 return True

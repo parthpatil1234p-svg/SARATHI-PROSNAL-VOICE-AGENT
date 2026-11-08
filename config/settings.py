@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # Assistant Persona
     ASSISTANT_NAME: str = "SARATHI"
-    USER_NAME: str = "Sir"
+    USER_NAME: str = "Parth"
 
     # LLM Configuration
     GROQ_API_KEY: str = Field(default="")

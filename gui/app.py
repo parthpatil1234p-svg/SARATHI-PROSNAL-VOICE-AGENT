@@ -45,7 +45,7 @@ class JarvisDesktopApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("J.A.R.V.I.S. // Stark Industries Voice Assistant")
+        self.title("SARATHI // Autonomous Desktop AI Assistant")
         self.geometry("1120x760")
         self.minsize(980, 680)
         self.configure(fg_color=COLOR_BG)
@@ -83,7 +83,7 @@ class JarvisDesktopApp(ctk.CTk):
         # Logo / Title
         logo_label = ctk.CTkLabel(
             sidebar,
-            text="J.A.R.V.I.S.",
+            text="SARATHI",
             font=ctk.CTkFont(family="Consolas", size=26, weight="bold"),
             text_color=COLOR_CYAN
         )
