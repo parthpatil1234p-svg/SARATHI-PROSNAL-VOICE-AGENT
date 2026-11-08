@@ -85,6 +85,12 @@ class Settings(BaseSettings):
     ENABLE_PIPELINED_TTS_QUEUE: bool = True
     ENABLE_EARLY_FILLERS: bool = True
 
+    # Supabase Cloud Sync
+    SUPABASE_URL: str = Field(default="")
+    SUPABASE_KEY: str = Field(default="")
+    SUPABASE_SERVICE_ROLE_KEY: str = Field(default="")
+    ENABLE_SUPABASE_SYNC: bool = True
+
     # Vision & Screen Analysis
     VISION_MODEL: str = "llama-3.2-11b-vision-preview"
 

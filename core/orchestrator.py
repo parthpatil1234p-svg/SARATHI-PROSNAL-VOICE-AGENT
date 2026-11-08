@@ -655,6 +655,17 @@ class AssistantOrchestrator:
                     full_text = " ".join(spoken_sentences) if spoken_sentences else ""
                     self.last_spoken_text = full_text
                     self.last_spoken_time = time.time()
+                    self.memory.add_assistant_message(full_text)
+
+                    # Cloud sync turn to Supabase in non-blocking background task
+                    try:
+                        from core.supabase_sync import supabase_sync
+                        if supabase_sync.enabled:
+                            asyncio.create_task(supabase_sync.push_memory_turn("user", user_text))
+                            asyncio.create_task(supabase_sync.push_memory_turn("assistant", full_text))
+                    except Exception as sync_err:
+                        logger.debug(f"Cloud sync dispatch note: {sync_err}")
+
                     # Grant 8-second continuous conversational follow-up window
                     self.active_conversation_timeout = time.time() + 8.0
 
