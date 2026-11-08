@@ -440,7 +440,8 @@ class AssistantOrchestrator:
             # Direct Mute & Unmute Commands (always handled instantly)
             cleaned_lower = effective_text.lower().strip().rstrip(".,!?")
             if any(q in cleaned_lower for q in ("mute my mic", "mute mic", "mute microphone", "stop listening", "mera mic mute", "mic band")):
-                audio_started_event.set()
+                if audio_started_event:
+                    audio_started_event.set()
                 await self.speak_direct("Microphone muted, Parth. Click the mic button on the bottom bar or type 'unmute' to speak again.", tracker=tracker)
                 self.mute_microphone()
                 self.state_machine.transition_to(AssistantState.IDLE)
@@ -448,7 +449,8 @@ class AssistantOrchestrator:
 
             if any(q in cleaned_lower for q in ("unmute my mic", "unmute mic", "unmute microphone", "start listening", "mera mic chalu", "unmute")):
                 self.unmute_microphone()
-                audio_started_event.set()
+                if audio_started_event:
+                    audio_started_event.set()
                 await self.speak_direct("Microphone unmuted, Parth! I'm listening.", tracker=tracker)
                 self.state_machine.transition_to(AssistantState.IDLE)
                 return
@@ -513,9 +515,10 @@ class AssistantOrchestrator:
             await event_bus.publish("user_speech", {"text": user_text, "latency_ms": 0})
 
             # Direct Mute & Unmute Commands (always handled instantly)
-            cleaned_lower = effective_text.lower().strip().rstrip(".,!?")
+            cleaned_lower = user_text.lower().strip().rstrip(".,!?")
             if any(q in cleaned_lower for q in ("mute my mic", "mute mic", "mute microphone", "stop listening", "mera mic mute", "mic band")):
-                audio_started_event.set()
+                if audio_started_event:
+                    audio_started_event.set()
                 await self.speak_direct("Microphone muted, Parth. Click the mic button on the bottom bar or type 'unmute' to speak again.", tracker=tracker)
                 self.mute_microphone()
                 self.state_machine.transition_to(AssistantState.IDLE)
@@ -523,7 +526,8 @@ class AssistantOrchestrator:
 
             if any(q in cleaned_lower for q in ("unmute my mic", "unmute mic", "unmute microphone", "start listening", "mera mic chalu", "unmute")):
                 self.unmute_microphone()
-                audio_started_event.set()
+                if audio_started_event:
+                    audio_started_event.set()
                 await self.speak_direct("Microphone unmuted, Parth! I'm listening.", tracker=tracker)
                 self.state_machine.transition_to(AssistantState.IDLE)
                 return

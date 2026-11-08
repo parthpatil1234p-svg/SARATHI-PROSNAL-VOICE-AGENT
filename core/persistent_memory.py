@@ -39,18 +39,24 @@ class PersistentMemoryManager:
             cls._instance = PersistentMemoryManager()
         return cls._instance
 
-    def __init__(self, db_path: Path | None = None):
+    def __init__(self, db_path: Path | None = None, backup_db_path: Path | None = None):
         # 1. Determine primary and backup paths
         self.primary_db_path = db_path or (EXE_DIR / "sarathi_memory.db")
 
-        # Backup directory in user's home/AppData directory (immune to repo cleanups)
-        appdata = os.environ.get("APPDATA")
-        if appdata:
-            self.backup_dir = Path(appdata) / "SARATHI"
+        if backup_db_path is not None:
+            self.backup_db_path = backup_db_path
+        elif db_path is not None:
+            # Custom db path (e.g. in tests) - isolate backup to same directory
+            self.backup_db_path = db_path.parent / f"{db_path.stem}_backup.db"
         else:
-            self.backup_dir = Path.home() / ".sarathi"
-        self.backup_dir.mkdir(parents=True, exist_ok=True)
-        self.backup_db_path = self.backup_dir / "sarathi_memory.db"
+            # Backup directory in user's home/AppData directory (immune to repo cleanups)
+            appdata = os.environ.get("APPDATA")
+            if appdata:
+                self.backup_dir = Path(appdata) / "SARATHI"
+            else:
+                self.backup_dir = Path.home() / ".sarathi"
+            self.backup_dir.mkdir(parents=True, exist_ok=True)
+            self.backup_db_path = self.backup_dir / "sarathi_memory.db"
 
         # 2. Auto-recover from backup if primary is missing or empty
         self._ensure_database_integrity()

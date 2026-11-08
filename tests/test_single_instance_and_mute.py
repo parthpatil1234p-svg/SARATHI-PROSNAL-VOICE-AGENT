@@ -49,3 +49,34 @@ def test_audio_stream_mute_logic():
     assert stream.latest_level > 0
     chunk2 = stream.audio_queue.get_nowait()
     assert not np.all(chunk2 == 0)
+
+
+@pytest.mark.asyncio
+async def test_process_text_turn_no_name_error():
+    """Ensure process_text_turn does not raise NameError for effective_text."""
+    from unittest.mock import AsyncMock, patch
+    from core.orchestrator import AssistantOrchestrator
+
+    orchestrator = AssistantOrchestrator()
+    orchestrator.speak_direct = AsyncMock()
+
+    # Test mute command via text
+    await orchestrator.process_text_turn("mute mic")
+    assert orchestrator.audio_stream.is_muted is True
+
+    # Test unmute command via text
+    await orchestrator.process_text_turn("unmute")
+    assert orchestrator.audio_stream.is_muted is False
+
+    # Test arbitrary text (e.g. Hinglish / Hindi queries) without NameError
+    orchestrator.tts.synthesize = AsyncMock(return_value=b"fake_audio")
+
+    async def mock_stream(*args, **kwargs):
+        yield "Namaste "
+        yield "Parth."
+
+    orchestrator.llm.stream_response = mock_stream
+    with patch("core.orchestrator.player.play_bytes", return_value=True):
+        await orchestrator.process_text_turn("Hinglish")
+        await orchestrator.process_text_turn("Can you speak in Hindi?")
+
