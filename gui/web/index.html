@@ -42,7 +42,7 @@
   
   <style>
     @layer base {
-      html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; background-color: #0A0E14; }
+      html, body { margin: 0; padding: 0; overflow: hidden; height: 100vh; background: transparent !important; }
       body { overscroll-behavior: none; }
     }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -159,10 +159,10 @@
   </script>
 </head>
 
-<body class="bg-[#0A0E14] font-headline text-on-surface antialiased select-none overflow-hidden h-screen flex flex-col">
-  <!-- Visual background layers -->
-  <div class="fixed inset-0 pointer-events-none tactical-grid-bg opacity-35 z-0"></div>
-  <div class="fixed inset-0 pointer-events-none scanline-overlay opacity-25 z-50"></div>
+<body class="bg-transparent font-headline text-on-surface antialiased select-none overflow-hidden h-screen flex flex-col">
+  <!-- Visual background layers (visible in cockpit dashboard only) -->
+  <div class="cockpit-bg-layer hidden fixed inset-0 pointer-events-none tactical-grid-bg opacity-35 z-0"></div>
+  <div class="cockpit-bg-layer hidden fixed inset-0 pointer-events-none scanline-overlay opacity-25 z-50"></div>
 
   <!-- ========================================================================= -->
   <!-- TOP COMMAND HEADER BAR (Fixed 40px)                                      -->
@@ -747,9 +747,9 @@
   <!-- ========================================================================= -->
   <!-- COMPACT FLOATING CIRCULAR VOICE ORB (#view-compact)                       -->
   <!-- ========================================================================= -->
-  <main class="flex flex-1 items-center justify-center overflow-hidden z-10 w-full h-full select-none bg-[#0A0E14] p-1.5" id="view-compact">
-    <!-- Pure Circular Floating Voice Pod (206x206) -->
-    <div class="relative w-[206px] h-[206px] rounded-full flex items-center justify-center group pywebview-drag-region cursor-move shadow-[0_0_40px_rgba(0,229,255,0.45)] border-2 border-cyan-400/60 bg-[#0A0E14] overflow-hidden" id="compact-orb-main" title="SARATHI Voice Orb (Drag anywhere)">
+  <main class="flex flex-1 items-center justify-center overflow-hidden z-10 w-full h-full select-none bg-transparent m-0 p-0" id="view-compact">
+    <!-- Pure Circular Floating Voice Pod (218x218 in 220x220 circle) -->
+    <div class="relative w-[218px] h-[218px] rounded-full flex items-center justify-center group cursor-default shadow-[0_0_35px_rgba(0,229,255,0.45)] border-2 border-cyan-400/70 bg-[#0A0E14] overflow-hidden select-none" id="compact-orb-main" title="SARATHI Voice Orb">
 
       <!-- Expanding Animated Voice Wave Ripples (active on speech) -->
       <div class="absolute inset-0 rounded-full border-2 border-cyan-400/50 voice-ripple-1 pointer-events-none" id="orb-ripple-1"></div>
@@ -769,50 +769,49 @@
       </div>
 
       <!-- Glowing Inner Core Reactor with Animated Audio Pulse -->
-      <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-container/40 via-cyan-500/60 to-primary/80 border-2 border-primary flex items-center justify-center core-pulse shadow-[0_0_25px_rgba(0,229,255,0.9)] z-10" id="compact-reactor-core">
+      <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-container/40 via-cyan-500/60 to-primary/80 border-2 border-primary flex items-center justify-center core-pulse shadow-[0_0_25px_rgba(0,229,255,0.9)] z-10 cursor-pointer" id="compact-reactor-core" title="SARATHI Core (Active)">
         <span class="material-symbols-outlined text-white text-[22px] drop-shadow-[0_0_8px_rgba(0,229,255,1)]" id="compact-core-icon">graphic_eq</span>
       </div>
 
       <!-- Mini Live Status Badge (Bottom of Orb) -->
       <div class="absolute bottom-2.5 inset-x-3 flex items-center justify-center pointer-events-none z-20">
-        <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-highest/90 border border-outline-variant/40 backdrop-blur-md shadow">
+        <div class="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container-highest/95 border border-outline-variant/50 backdrop-blur-md shadow">
           <span class="w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse" id="compact-state-dot"></span>
           <span class="font-telemetry text-[8px] text-primary uppercase font-bold tracking-wider" id="compact-state-text">STANDBY</span>
         </div>
       </div>
 
       <!-- Hover Quick Actions Dock (Smooth fade-in on mouse hover) -->
-      <div class="absolute inset-0 rounded-full bg-[#0A0E14]/92 backdrop-blur-md flex flex-col items-center justify-center gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 z-30 p-2 select-none" style="-webkit-app-region: no-drag;">
+      <div class="absolute inset-0 rounded-full bg-[#0A0E14]/94 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 p-2 select-none" onmousedown="event.stopPropagation();">
         <span class="font-label text-[9px] text-primary uppercase font-bold tracking-widest mb-0.5">SARATHI ORB</span>
         
-        <div class="flex items-center justify-center gap-1.5">
+        <div class="flex items-center justify-center gap-2" onmousedown="event.stopPropagation();">
           <!-- Full Dashboard Button -->
-          <button onclick="expandToFullDashboard(); event.stopPropagation();" title="Expand to Full Tactical Dashboard" class="w-8 h-8 rounded-full bg-primary-container hover:bg-primary-container/80 text-on-primary-container flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all">
+          <button onmousedown="event.stopPropagation();" onclick="expandToFullDashboard(event);" title="Expand to Full Tactical Dashboard" class="w-8 h-8 rounded-full bg-primary-container hover:bg-primary-container/80 text-on-primary-container flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer">
             <span class="material-symbols-outlined text-[16px]">open_in_full</span>
           </button>
 
           <!-- Mic Mute Button -->
-          <button onclick="toggleMicMute(); event.stopPropagation();" id="compact-hover-mic-btn" title="Toggle Microphone Mute" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-bright text-on-surface border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+          <button onmousedown="event.stopPropagation();" onclick="toggleMicMute(event);" id="compact-hover-mic-btn" title="Toggle Microphone Mute" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-bright text-on-surface border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer">
             <span class="material-symbols-outlined text-[16px]">mic</span>
           </button>
 
           <!-- Studio Config Button -->
-          <button onclick="toggleConfigModal(true); event.stopPropagation();" title="Open Settings & Voice Studio" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-bright text-on-surface border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+          <button onmousedown="event.stopPropagation();" onclick="openStudioFromCompact(event);" title="Open Settings & Voice Studio" class="w-8 h-8 rounded-full bg-surface-container hover:bg-surface-bright text-on-surface border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer">
             <span class="material-symbols-outlined text-[16px]">tune</span>
           </button>
 
           <!-- Hide to Background Button -->
-          <button onclick="hideToBackground(); event.stopPropagation();" title="Hide to Background Resident Mode" class="w-8 h-8 rounded-full bg-surface-container hover:bg-error-container/40 text-on-surface hover:text-error border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
+          <button onmousedown="event.stopPropagation();" onclick="hideToBackground(event);" title="Hide to Background Resident Mode" class="w-8 h-8 rounded-full bg-surface-container hover:bg-error-container/40 text-on-surface hover:text-error border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer">
             <span class="material-symbols-outlined text-[16px]">close</span>
           </button>
         </div>
 
-        <span class="font-telemetry text-[7px] text-outline uppercase tracking-wider mt-0.5">Drag anywhere</span>
+        <span class="font-telemetry text-[7px] text-outline uppercase tracking-wider mt-0.5">SARATHI AI // ACTIVE</span>
       </div>
 
       <!-- Dialogue snippet for compact view -->
       <span class="hidden" id="compact-transcript-text">"All systems online, Parth. Standing by..."</span>
-
     </div>
   </main>
 
@@ -1056,7 +1055,11 @@
       if (btnBarge) btnBarge.className = inactiveClass;
       if (btnLogs) btnLogs.className = inactiveClass;
 
+      const bgLayers = document.querySelectorAll('.cockpit-bg-layer');
       if (viewName === 'compact') {
+        document.body.style.backgroundColor = 'transparent';
+        document.documentElement.style.backgroundColor = 'transparent';
+        bgLayers.forEach(el => el.classList.add('hidden'));
         if (compact) {
           compact.classList.remove('hidden');
           compact.classList.add('flex');
@@ -1064,6 +1067,9 @@
         if (headerBar) headerBar.classList.add('hidden');
         if (footerBar) footerBar.classList.add('hidden');
       } else {
+        document.body.style.backgroundColor = '#0A0E14';
+        document.documentElement.style.backgroundColor = '#0A0E14';
+        bgLayers.forEach(el => el.classList.remove('hidden'));
         if (headerBar) headerBar.classList.remove('hidden');
         if (footerBar) footerBar.classList.remove('hidden');
         if (viewName === 'cockpit' && cockpit) {
@@ -1081,13 +1087,47 @@
       }
     }
 
-    function expandToFullDashboard() {
+        function expandToFullDashboard(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
       if (window.pywebview && window.pywebview.api && window.pywebview.api.expand_dashboard) {
         window.pywebview.api.expand_dashboard();
       } else {
         switchView('cockpit');
       }
     }
+    function toggleMicMute(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const btn = document.getElementById('compact-hover-mic-btn');
+      runQuickAction('mute_mic', btn);
+    }
+
+    function openStudioFromCompact(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      expandToFullDashboard(event);
+      setTimeout(() => {
+        toggleConfigModal(true);
+      }, 250);
+    }
+
+    function hideToBackground(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      if (window.pywebview?.api) {
+        window.pywebview.api.close_window();
+      }
+    }
+
 
     function collapseToCompact() {
       if (window.pywebview && window.pywebview.api && window.pywebview.api.collapse_to_compact) {
@@ -1384,6 +1424,34 @@
 
     // Quick Action Handler with instant debounce and responsive feedback
         function updateMicMuteUI(isMuted) {
+      const compactMicBtn = document.getElementById('compact-hover-mic-btn');
+      const compactStateText = document.getElementById('compact-state-text');
+      const compactStateDot = document.getElementById('compact-state-dot');
+
+      if (compactMicBtn) {
+        const icon = compactMicBtn.querySelector('.material-symbols-outlined');
+        if (isMuted) {
+          compactMicBtn.className = "w-8 h-8 rounded-full bg-error text-white border border-error flex items-center justify-center shadow-lg hover:scale-110 active:scale-95 transition-all cursor-pointer";
+          if (icon) icon.textContent = 'mic_off';
+        } else {
+          compactMicBtn.className = "w-8 h-8 rounded-full bg-surface-container hover:bg-surface-bright text-on-surface border border-outline-variant/40 flex items-center justify-center hover:scale-110 active:scale-95 transition-all cursor-pointer";
+          if (icon) icon.textContent = 'mic';
+        }
+      }
+
+      if (compactStateText) {
+        compactStateText.textContent = isMuted ? 'MUTED' : 'STANDBY';
+        compactStateText.className = isMuted
+          ? "font-telemetry text-[8px] text-error uppercase font-bold tracking-wider"
+          : "font-telemetry text-[8px] text-primary uppercase font-bold tracking-wider";
+      }
+
+      if (compactStateDot) {
+        compactStateDot.className = isMuted
+          ? "w-1.5 h-1.5 rounded-full bg-error"
+          : "w-1.5 h-1.5 rounded-full bg-secondary-fixed-dim animate-pulse";
+      }
+
       const btn = document.getElementById('quick-mic-mute-btn');
       const micDisp = document.getElementById('mic-status-display');
       const input = document.getElementById('tactical-input');

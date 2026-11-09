@@ -93,6 +93,56 @@ def bring_sarathi_window_to_front(window_title_keyword: str = "SARATHI"):
         logger.debug(f"Win32 bring to front error: {e}")
 
 
+def find_sarathi_hwnd(window_title_keyword: str = "SARATHI") -> int | None:
+    """Finds the native OS HWND for the Sarathi window."""
+    if sys.platform != "win32":
+        return None
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        matched = []
+
+        def enum_cb(h, _):
+            if user32.IsWindow(h):
+                length = user32.GetWindowTextLengthW(h)
+                if length > 0:
+                    buf = ctypes.create_unicode_buffer(length + 1)
+                    user32.GetWindowTextW(h, buf, length + 1)
+                    if window_title_keyword.upper() in buf.value.upper():
+                        matched.append(h)
+            return True
+
+        cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+        user32.EnumWindows(cb_type(enum_cb), 0)
+        return matched[0] if matched else None
+    except Exception:
+        return None
+
+
+def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220):
+    """
+    Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or borders.
+    When is_circular is False, restores full rectangular region for the cockpit dashboard.
+    """
+    if sys.platform != "win32":
+        return
+    hwnd = find_sarathi_hwnd()
+    if not hwnd:
+        return
+    import ctypes
+    try:
+        if is_circular:
+            hrgn = ctypes.windll.gdi32.CreateEllipticRgn(0, 0, width, height)
+            ctypes.windll.user32.SetWindowRgn(hwnd, hrgn, True)
+            logger.info(f"Set circular OS window region ({width}x{height}) on HWND {hwnd}")
+        else:
+            ctypes.windll.user32.SetWindowRgn(hwnd, 0, True)
+            logger.info(f"Restored rectangular OS window region on HWND {hwnd}")
+    except Exception as e:
+        logger.warning(f"Error setting window region: {e}")
+
+
 class SarathiHUDApp:
     """
     Main Desktop HUD Application runner.
@@ -278,6 +328,9 @@ class SarathiHUDApp:
         init_x = max(10, sw - 260)
         init_y = max(10, sh - 320)
 
+        # Configure pywebview settings: allow direct target drag, prevent button interception
+        webview.settings['DRAG_REGION_DIRECT_TARGET_ONLY'] = True
+
         self.window = webview.create_window(
             title="SARATHI // Autonomous Desktop AI Assistant",
             url=str(html_path.resolve()),
@@ -289,11 +342,24 @@ class SarathiHUDApp:
             min_size=(180, 180),
             background_color="#0A0E14",
             frameless=True,
-            easy_drag=True,
+            easy_drag=False,
+            transparent=True,
             on_top=True,
             minimized=start_in_background,
             hidden=False
         )
+
+        def _apply_initial_shape():
+            import time
+            for _ in range(25):
+                time.sleep(0.12)
+                h = find_sarathi_hwnd()
+                if h:
+                    set_circular_window_region(True, init_w, init_h)
+                    break
+
+        threading.Thread(target=_apply_initial_shape, daemon=True).start()
+
         self.bridge.set_window(self.window)
         if hasattr(self.bridge, "set_hud_app"):
             self.bridge.set_hud_app(self)

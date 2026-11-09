@@ -57,6 +57,12 @@ class SarathiWebBridge:
                 w, h = 1440, 900
                 x = max(10, (sw - w) // 2)
                 y = max(10, (sh - h) // 2)
+                # Remove circular OS region clipping so full cockpit dashboard is visible
+                try:
+                    from gui.hud import set_circular_window_region
+                    set_circular_window_region(False)
+                except Exception:
+                    pass
                 self._window.resize(w, h)
                 self._window.move(x, y)
                 self._window.on_top = False
@@ -78,6 +84,12 @@ class SarathiWebBridge:
                 self._window.resize(w, h)
                 self._window.move(x, y)
                 self._window.on_top = True
+                # Re-apply circular OS region clipping to guarantee 0 square box
+                try:
+                    from gui.hud import set_circular_window_region
+                    set_circular_window_region(True, w, h)
+                except Exception:
+                    pass
                 self._window.evaluate_js("switchView('compact');")
                 logger.info("Collapsed to Compact Floating Circular Voice Orb (220x220).")
             except Exception as e:
