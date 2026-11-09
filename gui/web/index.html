@@ -926,7 +926,7 @@
           <div class="grid grid-cols-3 gap-2">
             <button class="p-2 rounded border border-primary-container bg-surface-container text-left text-xs" id="tts-opt-edge" onclick="selectTtsProvider('edge_tts')">
               <div class="font-bold text-primary">Edge-TTS</div>
-              <div class="text-[10px] text-on-surface-variant">Paul Bettany (UK)</div>
+              <div class="text-[10px] text-on-surface-variant">Madhur (Hindi/EN)</div>
             </button>
             <button class="p-2 rounded border border-outline-variant/40 bg-surface-container-low text-left text-xs" id="tts-opt-sapi" onclick="selectTtsProvider('sapi')">
               <div class="font-bold text-on-surface">Offline SAPI5</div>
@@ -1041,14 +1041,18 @@
     const logEntries = [];
     let currentLogFilter = 'all';
 
-    function switchView(viewName) {
-      // If switching to a dashboard view while in compact window, request python to expand first
-      if (viewName !== 'compact') {
+    let isExpandingFromJs = false;
+    function switchView(viewName, force = false) {
+      if (viewName !== 'compact' && !force) {
         const compactView = document.getElementById('view-compact');
         if (compactView && !compactView.classList.contains('hidden')) {
           if (window.pywebview && window.pywebview.api && window.pywebview.api.expand_dashboard) {
-            window.pywebview.api.expand_dashboard();
-            return;
+            if (!isExpandingFromJs) {
+              isExpandingFromJs = true;
+              window.pywebview.api.expand_dashboard().finally(() => {
+                isExpandingFromJs = false;
+              });
+            }
           }
         }
       }
@@ -1115,16 +1119,15 @@
       }
     }
 
-        function expandToFullDashboard(event) {
+    function expandToFullDashboard(event) {
       if (event) {
         event.stopPropagation();
         event.preventDefault();
       }
       if (window.pywebview && window.pywebview.api && window.pywebview.api.expand_dashboard) {
         window.pywebview.api.expand_dashboard();
-      } else {
-        switchView('cockpit');
       }
+      switchView('cockpit', true);
     }
     function triggerOrbWake(event) {
       if (event) {
@@ -1176,12 +1179,15 @@
     }
 
 
-    function collapseToCompact() {
+    function collapseToCompact(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
       if (window.pywebview && window.pywebview.api && window.pywebview.api.collapse_to_compact) {
         window.pywebview.api.collapse_to_compact();
-      } else {
-        switchView('compact');
       }
+      switchView('compact', true);
     }
 
     function addConversationLogEntry(entry) {

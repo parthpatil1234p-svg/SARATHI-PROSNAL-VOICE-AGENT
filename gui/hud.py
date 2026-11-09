@@ -129,7 +129,7 @@ def get_sarathi_hwnd(window=None) -> int | None:
 find_sarathi_hwnd = get_sarathi_hwnd
 
 
-def apply_window_transparency(window=None, is_transparent: bool = True):
+def apply_window_transparency(window=None, is_transparent: bool = True, width: int = 220, height: int = 220):
     """
     Applies true DWM desktop composition and per-pixel alpha transparency.
     Guarantees 100% circular floating orb with ZERO square bounding box and ZERO dark corners.
@@ -166,7 +166,7 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
 
         def _update_form():
             if is_transparent:
-                form.ClientSize = Size(220, 220)
+                form.ClientSize = Size(width, height)
                 form.BackColor = Color.FromArgb(0, 0, 0)
                 form.TransparencyKey = Color.Empty
                 form.AllowTransparency = False
@@ -174,6 +174,7 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
                     if "WebView2" in c.GetType().Name:
                         c.DefaultBackgroundColor = Color.Transparent
             else:
+                form.ClientSize = Size(width, height)
                 form.TransparencyKey = Color.Empty
                 form.AllowTransparency = False
                 form.BackColor = Color.FromArgb(10, 14, 20)
@@ -182,7 +183,7 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
                         c.DefaultBackgroundColor = Color.FromArgb(10, 14, 20)
 
         form.Invoke(Action(_update_form))
-        logger.info(f"Applied WinForms window transparency (is_transparent={is_transparent}) on HWND {hwnd}")
+        logger.info(f"Applied WinForms window transparency (is_transparent={is_transparent}, size={width}x{height}) on HWND {hwnd}")
     except Exception as e:
         logger.warning(f"Error applying window transparency: {e}")
 
@@ -217,7 +218,11 @@ def set_circular_window_region(is_circular: bool, width: int = 220, height: int 
             logger.info(f"Set circular OS window region ({width}x{height}) on Form HWND {hwnd}")
         else:
             user32.SetWindowRgn(hwnd, 0, True)
-            logger.info(f"Restored rectangular OS window region on Form HWND {hwnd}")
+            SWP_NOMOVE = 0x0002
+            SWP_NOZORDER = 0x0004
+            SWP_FRAMECHANGED = 0x0020
+            user32.SetWindowPos(hwnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED)
+            logger.info(f"Restored rectangular OS window region ({width}x{height}) on Form HWND {hwnd}")
     except Exception as e:
         logger.warning(f"Error setting window region: {e}")
 

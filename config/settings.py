@@ -48,7 +48,7 @@ class Settings(BaseSettings):
 
     # TTS Configuration
     TTS_PROVIDER: str = Field(default="edge_tts")  # "edge_tts", "sapi" (ultra-fast 150ms), or "elevenlabs"
-    EDGE_TTS_VOICE: str = "en-GB-RyanNeural"  # Crisp, formal British male accent
+    EDGE_TTS_VOICE: str = "hi-IN-MadhurNeural"  # Crisp, natural Hindi & Indian English neural voice (Madhur)
     ELEVENLABS_API_KEY: str = Field(default="")
     ELEVENLABS_VOICE_ID: str = Field(default="")
 
