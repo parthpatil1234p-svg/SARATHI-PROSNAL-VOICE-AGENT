@@ -131,7 +131,7 @@ find_sarathi_hwnd = get_sarathi_hwnd
 
 def apply_window_transparency(window=None, is_transparent: bool = True):
     """
-    Applies true WinForms TransparencyKey + DWM desktop composition.
+    Applies true DWM desktop composition and per-pixel alpha transparency.
     Guarantees 100% circular floating orb with ZERO square bounding box and ZERO dark corners.
     """
     if sys.platform != "win32":
@@ -142,7 +142,7 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
         import clr
         clr.AddReference('System.Windows.Forms')
         clr.AddReference('System.Drawing')
-        from System.Drawing import Color
+        from System.Drawing import Color, Size
         from System import Action
         import ctypes
 
@@ -166,13 +166,20 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
 
         def _update_form():
             if is_transparent:
-                key = Color.FromArgb(1, 1, 1)
-                form.BackColor = key
-                form.AllowTransparency = True
-                form.TransparencyKey = key
+                form.ClientSize = Size(220, 220)
+                form.BackColor = Color.FromArgb(0, 0, 0)
+                form.TransparencyKey = Color.Empty
+                form.AllowTransparency = False
+                for c in form.Controls:
+                    if "WebView2" in c.GetType().Name:
+                        c.DefaultBackgroundColor = Color.Transparent
             else:
                 form.TransparencyKey = Color.Empty
+                form.AllowTransparency = False
                 form.BackColor = Color.FromArgb(10, 14, 20)
+                for c in form.Controls:
+                    if "WebView2" in c.GetType().Name:
+                        c.DefaultBackgroundColor = Color.FromArgb(10, 14, 20)
 
         form.Invoke(Action(_update_form))
         logger.info(f"Applied WinForms window transparency (is_transparent={is_transparent}) on HWND {hwnd}")
@@ -183,7 +190,8 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
 def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220, window=None):
     """
     Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or dark corners.
-    Applies CreateEllipticRgn to the top-level Form HWND and all child HWNDs with dedicated region handles.
+    Applies CreateEllipticRgn strictly to the top-level Form HWND.
+    Does NOT touch child HWNDs so that Chromium's internal mouse hit testing and hover events remain 100% responsive.
     When is_circular is False, restores full rectangular region for the cockpit dashboard.
     """
     if sys.platform != "win32":
@@ -197,14 +205,6 @@ def set_circular_window_region(is_circular: bool, width: int = 220, height: int 
     gdi32 = ctypes.windll.gdi32
 
     try:
-        children = []
-        def child_cb(ch, _):
-            children.append(ch)
-            return True
-        cb_child = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)(child_cb)
-        user32.EnumChildWindows(hwnd, cb_child, 0)
-        all_hwnds = [hwnd] + children
-
         if is_circular:
             # Force exact physical client dimensions
             SWP_NOMOVE = 0x0002
@@ -212,29 +212,12 @@ def set_circular_window_region(is_circular: bool, width: int = 220, height: int 
             SWP_FRAMECHANGED = 0x0020
             user32.SetWindowPos(hwnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED)
 
-            rect = wintypes.RECT()
-            user32.GetWindowRect(hwnd, ctypes.byref(rect))
-            w = rect.right - rect.left
-            h = rect.bottom - rect.top
-            if w <= 0 or h <= 0:
-                w, h = width, height
-
-            for h_w in all_hwnds:
-                try:
-                    # Windows SetWindowRgn takes ownership of the region handle,
-                    # so a distinct handle must be created for each window.
-                    h_rgn = gdi32.CreateEllipticRgn(0, 0, w, h)
-                    user32.SetWindowRgn(h_w, h_rgn, True)
-                except Exception:
-                    pass
-            logger.info(f"Set circular OS window region ({w}x{h}) on Form HWND {hwnd} and {len(children)} child surfaces")
+            h_rgn = gdi32.CreateEllipticRgn(0, 0, width, height)
+            user32.SetWindowRgn(hwnd, h_rgn, True)
+            logger.info(f"Set circular OS window region ({width}x{height}) on Form HWND {hwnd}")
         else:
-            for h_w in all_hwnds:
-                try:
-                    user32.SetWindowRgn(h_w, 0, True)
-                except Exception:
-                    pass
-            logger.info(f"Restored rectangular OS window region on Form HWND {hwnd} and {len(children)} child surfaces")
+            user32.SetWindowRgn(hwnd, 0, True)
+            logger.info(f"Restored rectangular OS window region on Form HWND {hwnd}")
     except Exception as e:
         logger.warning(f"Error setting window region: {e}")
 
@@ -443,7 +426,7 @@ class SarathiHUDApp:
             x=init_x,
             y=init_y,
             min_size=(180, 180),
-            background_color="#0A0E14",
+            background_color="#000000",
             frameless=True,
             easy_drag=False,
             transparent=True,

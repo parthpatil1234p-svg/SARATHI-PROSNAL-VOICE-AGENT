@@ -38,16 +38,17 @@
 
     /* Explicit Hover Quick Actions Dock Rules */
     #compact-hover-dock {
-      opacity: 0 !important;
-      visibility: hidden !important;
-      pointer-events: none !important;
-      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
     }
 
     #compact-orb-main:hover #compact-hover-dock,
     #compact-orb-main.is-hovered #compact-hover-dock,
     #compact-hover-dock:hover,
-    #compact-hover-dock.is-active {
+    #compact-hover-dock.is-active,
+    body.orb-hovered #compact-hover-dock {
       opacity: 1 !important;
       visibility: visible !important;
       pointer-events: auto !important;
@@ -1041,6 +1042,16 @@
     let currentLogFilter = 'all';
 
     function switchView(viewName) {
+      // If switching to a dashboard view while in compact window, request python to expand first
+      if (viewName !== 'compact') {
+        const compactView = document.getElementById('view-compact');
+        if (compactView && !compactView.classList.contains('hidden')) {
+          if (window.pywebview && window.pywebview.api && window.pywebview.api.expand_dashboard) {
+            window.pywebview.api.expand_dashboard();
+            return;
+          }
+        }
+      }
       const cockpit = document.getElementById('view-cockpit');
       const barge = document.getElementById('view-barge');
       const logs = document.getElementById('view-logs');
@@ -1923,22 +1934,47 @@
     function setupOrbHoverEvents() {
       const orbMain = document.getElementById('compact-orb-main');
       const hoverDock = document.getElementById('compact-hover-dock');
-      if (orbMain && hoverDock) {
-        orbMain.addEventListener('mouseenter', () => {
-          orbMain.classList.add('is-hovered');
-          hoverDock.classList.add('is-active');
-        });
-        orbMain.addEventListener('mousemove', () => {
-          orbMain.classList.add('is-hovered');
-          hoverDock.classList.add('is-active');
-        });
-        orbMain.addEventListener('mouseleave', () => {
+      if (!orbMain || !hoverDock) return;
+
+      let hideTimeout = null;
+
+      function showDock() {
+        if (hideTimeout) {
+          clearTimeout(hideTimeout);
+          hideTimeout = null;
+        }
+        orbMain.classList.add('is-hovered');
+        hoverDock.classList.add('is-active');
+        document.body.classList.add('orb-hovered');
+      }
+
+      function scheduleHideDock() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        hideTimeout = setTimeout(() => {
           orbMain.classList.remove('is-hovered');
           hoverDock.classList.remove('is-active');
-        });
+          document.body.classList.remove('orb-hovered');
+        }, 150);
       }
+
+      orbMain.addEventListener('mouseenter', showDock);
+      orbMain.addEventListener('mousemove', showDock);
+      orbMain.addEventListener('mouseleave', scheduleHideDock);
+
+      hoverDock.addEventListener('mouseenter', showDock);
+      hoverDock.addEventListener('mousemove', showDock);
+      hoverDock.addEventListener('mouseleave', scheduleHideDock);
+
+      document.addEventListener('mousemove', () => {
+        const compactView = document.getElementById('view-compact');
+        if (compactView && !compactView.classList.contains('hidden')) {
+          showDock();
+        }
+      });
+      document.addEventListener('mouseleave', scheduleHideDock);
     }
     setupOrbHoverEvents();
+    document.addEventListener('DOMContentLoaded', setupOrbHoverEvents);
 
     // Guarantee Compact Floating Circular Voice Orb on initial load
     switchView('compact');
