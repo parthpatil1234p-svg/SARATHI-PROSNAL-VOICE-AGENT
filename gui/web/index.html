@@ -4,7 +4,41 @@
   <meta charset="utf-8"/>
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>SARATHI // Autonomous Desktop AI Assistant</title>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+    <!-- Offline Embedded Material Symbols Font & Emergency Zero-Flicker Layout Rules -->
+  <style>
+    @font-face {
+      font-family: 'Material Symbols Outlined';
+      font-style: normal;
+      font-weight: 100 700;
+      src: url('vendor/material-symbols.ttf') format('truetype');
+      font-display: block;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined' !important;
+      font-weight: normal;
+      font-style: normal;
+      font-size: 20px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+    .hidden { display: none !important; }
+    [hidden] { display: none !important; }
+    #view-cockpit.hidden { display: none !important; }
+    #main-header-bar.hidden { display: none !important; }
+    #status-footer-bar.hidden { display: none !important; }
+    footer.hidden { display: none !important; }
+  </style>
+
+  <!-- Google Fonts for typography when online, with system fallback -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   
   <style>
     @layer base {
@@ -79,7 +113,7 @@
     }
   </style>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="vendor/tailwind.min.js"></script>
   <script>
     tailwind.config = {
       darkMode: "class",
