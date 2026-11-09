@@ -35,6 +35,23 @@
     #main-header-bar.hidden { display: none !important; }
     #status-footer-bar.hidden { display: none !important; }
     footer.hidden { display: none !important; }
+
+    /* Explicit Hover Quick Actions Dock Rules */
+    #compact-hover-dock {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.22s;
+    }
+
+    #compact-orb-main:hover #compact-hover-dock,
+    #compact-orb-main.is-hovered #compact-hover-dock,
+    #compact-hover-dock:hover,
+    #compact-hover-dock.is-active {
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+    }
   </style>
 
   <!-- Google Fonts for typography when online, with system fallback -->
@@ -782,7 +799,7 @@
       </div>
 
       <!-- Hover Quick Actions Dock (Smooth fade-in on mouse hover) -->
-      <div class="absolute inset-0 rounded-full bg-[#0A0E14]/94 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 p-2 select-none" onmousedown="event.stopPropagation();" onmouseup="event.stopPropagation();">
+      <div id="compact-hover-dock" class="absolute inset-0 rounded-full bg-[#0A0E14]/94 backdrop-blur-md flex flex-col items-center justify-center gap-2  transition-all duration-200 z-30 p-2 select-none" onmousedown="event.stopPropagation();" onmouseup="event.stopPropagation();">
         <span class="font-label text-[9px] text-primary uppercase font-bold tracking-widest mb-0.5">SARATHI ORB</span>
         
         <div class="flex items-center justify-center gap-2" onmousedown="event.stopPropagation();">
@@ -1902,6 +1919,26 @@
         toggleConfigModal(false);
       }
     }
+
+    function setupOrbHoverEvents() {
+      const orbMain = document.getElementById('compact-orb-main');
+      const hoverDock = document.getElementById('compact-hover-dock');
+      if (orbMain && hoverDock) {
+        orbMain.addEventListener('mouseenter', () => {
+          orbMain.classList.add('is-hovered');
+          hoverDock.classList.add('is-active');
+        });
+        orbMain.addEventListener('mousemove', () => {
+          orbMain.classList.add('is-hovered');
+          hoverDock.classList.add('is-active');
+        });
+        orbMain.addEventListener('mouseleave', () => {
+          orbMain.classList.remove('is-hovered');
+          hoverDock.classList.remove('is-active');
+        });
+      }
+    }
+    setupOrbHoverEvents();
 
     // Guarantee Compact Floating Circular Voice Orb on initial load
     switchView('compact');

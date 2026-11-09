@@ -276,30 +276,6 @@ class SarathiWebBridge:
         logger.info("Barge-in triggered via HUD.")
         return {"status": "interrupted"}
 
-    def trigger_wake(self) -> dict[str, Any]:
-        """Manually forces wake detection as if user clicked push-to-talk mic."""
-        if self._loop and self._loop.is_running():
-            from core.state_machine import AssistantState
-
-            async def _wake_coro():
-                self._orchestrator.active_conversation_timeout = time.time() + 15.0
-                self._orchestrator.state_machine.transition_to(AssistantState.WAKE_DETECTED)
-                await self._orchestrator._play_wake_chime()
-                # Ensure microphone buffer is drained so wake cue is not recorded as speech
-                await asyncio.sleep(0.3)
-                while not self._orchestrator.audio_stream.audio_queue.empty():
-                    try:
-                        self._orchestrator.audio_stream.audio_queue.get_nowait()
-                    except Exception:
-                        break
-                self._orchestrator.vad.reset()
-                self._orchestrator.state_machine.transition_to(AssistantState.LISTENING)
-
-            asyncio.run_coroutine_threadsafe(_wake_coro(), self._loop)
-            logger.info("Manual wake pulse triggered via HUD mic.")
-            return {"status": "listening"}
-        return {"status": "error"}
-
     # -------------------------------------------------------------
     # Quick Trigger Actions
     # -------------------------------------------------------------

@@ -183,7 +183,7 @@ def apply_window_transparency(window=None, is_transparent: bool = True):
 def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220, window=None):
     """
     Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or dark corners.
-    Applies CreateEllipticRgn to the top-level Form HWND and all child HWNDs.
+    Applies CreateEllipticRgn to the top-level Form HWND and all child HWNDs with dedicated region handles.
     When is_circular is False, restores full rectangular region for the cockpit dashboard.
     """
     if sys.platform != "win32":
@@ -221,18 +221,20 @@ def set_circular_window_region(is_circular: bool, width: int = 220, height: int 
 
             for h_w in all_hwnds:
                 try:
-                    hrgn = gdi32.CreateEllipticRgn(0, 0, w, h)
-                    user32.SetWindowRgn(h_w, hrgn, True)
+                    # Windows SetWindowRgn takes ownership of the region handle,
+                    # so a distinct handle must be created for each window.
+                    h_rgn = gdi32.CreateEllipticRgn(0, 0, w, h)
+                    user32.SetWindowRgn(h_w, h_rgn, True)
                 except Exception:
                     pass
-            logger.info(f"Set circular OS window region ({w}x{h}) on HWND {hwnd} and {len(children)} surfaces")
+            logger.info(f"Set circular OS window region ({w}x{h}) on Form HWND {hwnd} and {len(children)} child surfaces")
         else:
             for h_w in all_hwnds:
                 try:
                     user32.SetWindowRgn(h_w, 0, True)
                 except Exception:
                     pass
-            logger.info(f"Restored rectangular OS window region on HWND {hwnd} and {len(children)} surfaces")
+            logger.info(f"Restored rectangular OS window region on Form HWND {hwnd} and {len(children)} child surfaces")
     except Exception as e:
         logger.warning(f"Error setting window region: {e}")
 

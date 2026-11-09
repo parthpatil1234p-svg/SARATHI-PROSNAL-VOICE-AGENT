@@ -18,7 +18,7 @@ if sys.platform == "win32":
 
 from rich.console import Console
 
-from config.settings import settings
+from config.settings import BASE_DIR, settings
 from core.event_bus import event_bus
 from core.filler_manager import filler_manager
 from core.latency_tracker import TurnLatencyTracker
@@ -84,14 +84,16 @@ def check_wake_word_match(transcript: str) -> bool:
         "he sarti", "hey sarti", "hey arti", "he arti", "hey jarvis", "jarvis",
         "hey sarthak", "sarthak", "sarathi ji", "sarthi ji", "sarthi suno", "sarathi suno",
         "sari", "sarkii", "sarki", "saari", "sarthe", "swarthi", "srathi", "surati", "sharti",
-        "saarthee", "he sari", "hey sari", "hey sarki", "he sarki", "he sarath", "hey sarath"
+        "saarthee", "he sari", "hey sari", "hey sarki", "he sarki", "he sarath", "hey sarath",
+        "sathi", "saathi", "he sathi", "hey sathi", "hai sarthi", "hai sarathi", "ai sarthi",
+        "hi sarthi", "hi sarathi", "sarthik", "sarthi please", "sarathi please"
     )
     if any(kw in cleaned for kw in wake_keywords):
         return True
 
-    # Regex pattern: (hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|jarvis)
+    # Regex pattern: (hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|saathi|sathi|sarthak|jarvis)
     import re
-    pattern = r"\b(hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|jarvis)\b"
+    pattern = r"\b(hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|saathi|sathi|sarthak|jarvis)\b"
     if re.search(pattern, cleaned):
         return True
 
@@ -259,7 +261,26 @@ class AssistantOrchestrator:
                                         self.state_machine.transition_to(AssistantState.LISTENING)
                                         self.vad.reset()
                                 else:
-                                    logger.debug(f"[IDLE Noise Ignored] '{transcript}' did not match wake keywords.")
+                                    # Check if user spoke a direct command or question without repeating wake word
+                                    cleaned_t = transcript.lower().strip().rstrip(".,!?")
+                                    words = cleaned_t.split()
+                                    question_triggers = (
+                                        "what", "why", "how", "who", "when", "where", "can you", "could you", "tell me",
+                                        "explain", "help", "kya", "kaise", "kahan", "kab", "kyu", "kyun", "batao", "suno",
+                                        "namaste", "hello", "hi", "hey", "open", "close", "mute", "unmute", "stop", "chalu",
+                                        "band", "dekho", "search", "karo", "weather", "time"
+                                    )
+                                    is_question_or_command = any(cleaned_t.startswith(q) or f" {q} " in f" {cleaned_t} " for q in question_triggers)
+                                    if len(words) >= 2 and is_question_or_command:
+                                        console.print(f"[bold green][DIRECT QUESTION] Answering: '{transcript}'[/bold green]")
+                                        self.active_conversation_timeout = time.time() + 25.0
+                                        self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
+                                        await event_bus.publish("wake_detected", {"transcript": transcript})
+                                        await self._play_wake_chime(speak_ack=False)
+                                        self.state_machine.transition_to(AssistantState.PROCESSING)
+                                        await self.process_text_turn(transcript)
+                                    else:
+                                        logger.debug(f"[IDLE Noise Ignored] '{transcript}' did not match wake keywords or question.")
                             except Exception as e:
                                 logger.error(f"Error evaluating idle wake audio: {e}")
                             finally:
@@ -285,6 +306,7 @@ class AssistantOrchestrator:
                         if not self.vad.speech_started and (now_t - self.listening_start_time > 7.0):
                             console.print("[dim]Listening timeout: No audible speech detected. Returning to standby.[/dim]")
                             self.vad.reset()
+                            self.active_conversation_timeout = 0.0
                             self.state_machine.transition_to(AssistantState.IDLE)
                             continue
 
@@ -823,6 +845,13 @@ class AssistantOrchestrator:
 
             self.last_spoken_text = f"Yes, {settings.USER_NAME}?" if speak_ack else "chime"
             self.last_spoken_time = time.time()
+            # Drain speaker sound from microphone queue to prevent self-triggering
+            await asyncio.sleep(0.25)
+            while not self.audio_stream.audio_queue.empty():
+                try:
+                    self.audio_stream.audio_queue.get_nowait()
+                except Exception:
+                    break
             self.vad.reset()
             self.idle_vad.reset()
         except Exception as e:

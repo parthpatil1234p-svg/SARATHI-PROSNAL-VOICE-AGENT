@@ -139,8 +139,28 @@ class WhisperSTT(BaseSTT):
                     timeout=settings.GROQ_TIMEOUT_SEC
                 )
                 text = str(transcription).strip()
-                # Suppress prompt reflection hallucinations on quiet frames
-                if text.lower() in ("sarathi ai assistant conversation in english or hindi.", "sarathi ai assistant", "commands and conversation in english and hindi."):
+                cleaned_lower = text.lower().strip().rstrip(".,!?")
+                # Suppress prompt reflection and dead-air hallucinations on quiet frames
+                hallucinations = (
+                    "sarathi ai assistant conversation in english or hindi.",
+                    "sarathi ai assistant",
+                    "commands and conversation in english and hindi.",
+                    "hinglish",
+                    "english",
+                    "hindi",
+                    "...",
+                    "....",
+                    ".... ...",
+                    "... ...",
+                    "thank you",
+                    "thanks",
+                    "bye",
+                    "okay",
+                    "the",
+                    "oh",
+                    "heck"
+                )
+                if cleaned_lower in hallucinations or "hinglish" in cleaned_lower and len(cleaned_lower.split()) <= 2:
                     return ""
                 logger.info(f"Groq Whisper transcription: '{text}'")
                 return text
