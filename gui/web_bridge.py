@@ -60,7 +60,7 @@ class SarathiWebBridge:
                 # Remove circular OS region clipping so full cockpit dashboard is visible
                 try:
                     from gui.hud import set_circular_window_region
-                    set_circular_window_region(False)
+                    set_circular_window_region(False, window=self._window)
                 except Exception:
                     pass
                 self._window.resize(w, h)
@@ -87,7 +87,7 @@ class SarathiWebBridge:
                 # Re-apply circular OS region clipping to guarantee 0 square box
                 try:
                     from gui.hud import set_circular_window_region
-                    set_circular_window_region(True, w, h)
+                    set_circular_window_region(True, w, h, window=self._window)
                 except Exception:
                     pass
                 self._window.evaluate_js("switchView('compact');")
@@ -102,6 +102,25 @@ class SarathiWebBridge:
             return self.expand_dashboard()
         else:
             return self.collapse_to_compact()
+
+    def trigger_wake(self) -> dict[str, Any]:
+        """Manually wakes up SARATHI from the GUI and transitions directly into LISTENING state."""
+        logger.info("[GUI Trigger] Manual wake requested from UI click.")
+        from core.state_machine import AssistantState
+        from core.event_bus import event_bus
+        import time
+
+        if self._loop and self._loop.is_running():
+            async def _wake_coro():
+                self._orchestrator.active_conversation_timeout = time.time() + 25.0
+                self._orchestrator.state_machine.transition_to(AssistantState.WAKE_DETECTED)
+                await event_bus.publish("wake_detected", {"source": "click"})
+                await self._orchestrator._play_wake_chime(speak_ack=True)
+                self._orchestrator.state_machine.transition_to(AssistantState.LISTENING)
+                self._orchestrator.vad.reset()
+
+            asyncio.run_coroutine_threadsafe(_wake_coro(), self._loop)
+        return {"status": "ok", "state": "LISTENING"}
 
     def set_loop(self, loop: asyncio.AbstractEventLoop):
         """Sets the active asyncio event loop."""

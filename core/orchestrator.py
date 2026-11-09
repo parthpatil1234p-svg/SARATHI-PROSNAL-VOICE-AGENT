@@ -70,6 +70,32 @@ class SafeConsole:
 console = SafeConsole()
 
 
+def check_wake_word_match(transcript: str) -> bool:
+    """Robust phonetic and keyword matcher for 'Hey Sarathi' / 'Sarthi' across dialects."""
+    if not transcript or not transcript.strip():
+        return False
+    cleaned = transcript.strip().lower()
+
+    # Direct phonetic matches
+    wake_keywords = (
+        "sarathi", "sarthi", "saarthi", "sharthi", "sarath", "sarth", "sarti",
+        "sarati", "sarthy", "sarthee", "surathi", "सारथी", "सार्थी",
+        "his arty", "is arty", "he sarthi", "hey sarthi", "he sarathi", "hey sarathi",
+        "he sarti", "hey sarti", "hey arti", "he arti", "hey jarvis", "jarvis",
+        "hey sarthak", "sarthak", "sarathi ji", "sarthi ji", "sarthi suno", "sarathi suno"
+    )
+    if any(kw in cleaned for kw in wake_keywords):
+        return True
+
+    # Regex pattern: (hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|arthi|jarvis)
+    import re
+    pattern = r"\b(hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|arthi|jarvis)\b"
+    if re.search(pattern, cleaned):
+        return True
+
+    return False
+
+
 class AssistantOrchestrator:
     """
     Central nervous system for J.A.R.V.I.S.
@@ -212,30 +238,25 @@ class AssistantOrchestrator:
                         if wake_turn_completed and wake_audio:
                             try:
                                 transcript = await self.stt.transcribe(wake_audio)
-                                cleaned = transcript.strip().lower()
-                                wake_keywords = (
-                                    "sarathi", "sarthi", "sarathy", "sarath", "sarti",
-                                    "surathi", "सारथी", "hey sarathi", "hey sarthi", "hey jarvis"
-                                )
-                                matched_wake = any(kw in cleaned for kw in wake_keywords)
-                                if matched_wake:
+                                logger.info(f"[IDLE Speech Captured] Transcribed: '{transcript}'")
+                                if check_wake_word_match(transcript):
                                     console.print(f"[bold green][WAKE] Wake word matched: '{transcript}'[/bold green]")
-                                    self.active_conversation_timeout = time.time() + 15.0
+                                    self.active_conversation_timeout = time.time() + 25.0
                                     self.state_machine.transition_to(AssistantState.WAKE_DETECTED)
                                     await event_bus.publish("wake_detected", {"transcript": transcript})
-                                    await self._play_wake_chime()
 
                                     # Check if user spoke a command directly after the wake phrase
                                     post_cmd = self._extract_post_wake_command(transcript)
                                     if post_cmd:
                                         console.print(f"[cyan]Executing direct command: '{post_cmd}'[/cyan]")
+                                        await self._play_wake_chime(speak_ack=False)
                                         self.state_machine.transition_to(AssistantState.PROCESSING)
                                         await self.process_text_turn(post_cmd)
                                     else:
+                                        await self._play_wake_chime(speak_ack=True)
                                         self.state_machine.transition_to(AssistantState.LISTENING)
                                         self.vad.reset()
                                 else:
-                                    # Ambient noise/speech without wake word in IDLE: ignore quietly
                                     logger.debug(f"[IDLE Noise Ignored] '{transcript}' did not match wake keywords.")
                             except Exception as e:
                                 logger.error(f"Error evaluating idle wake audio: {e}")
@@ -419,13 +440,9 @@ class AssistantOrchestrator:
             await event_bus.publish("user_speech", {"text": transcript, "latency_ms": round(stt_latency, 1)})
 
             # Check if user spoke pure wake word or prefaced command with wake word
-            wake_phrases = (
-                "sarathi", "sarthi", "sarathy", "sarath", "sarti",
-                "surathi", "सारथी", "hey sarathi", "hey sarthi", "hey jarvis"
-            )
-            if cleaned in wake_phrases:
+            if check_wake_word_match(cleaned) and len(cleaned.split()) <= 2:
                 audio_started_event.set()
-                await self.speak_direct("Yes sir, I'm listening.", tracker=tracker)
+                await self.speak_direct(f"Yes {settings.USER_NAME}, I'm listening.", tracker=tracker)
                 self.state_machine.transition_to(AssistantState.LISTENING)
                 self.vad.reset()
                 return
@@ -499,8 +516,10 @@ class AssistantOrchestrator:
         cleaned = text.strip().rstrip(".,!?")
         lower = cleaned.lower()
         wake_phrases = [
-            "hey sarathi", "hey sarthi", "hey jarvis",
-            "sarathi", "sarthi", "sarathy", "sarath", "sarti", "surathi", "सारथी", "jarvis"
+            "hey sarathi", "hey sarthi", "he sarathi", "he sarthi", "hey jarvis", "he jarvis",
+            "his arty", "is arty", "hey arti", "he arti", "sarathi ji", "sarthi ji",
+            "sarthi suno", "sarathi suno", "sarathi", "sarthi", "saarthi", "sharthi",
+            "sarathy", "sarath", "sarti", "surathi", "सारथी", "सार्थी", "jarvis"
         ]
         for wp in wake_phrases:
             if lower.startswith(wp):
@@ -680,8 +699,8 @@ class AssistantOrchestrator:
                     except Exception as sync_err:
                         logger.debug(f"Cloud sync dispatch note: {sync_err}")
 
-                    # Grant 8-second continuous conversational follow-up window
-                    self.active_conversation_timeout = time.time() + 8.0
+                    # Grant 25-second continuous conversational follow-up window
+                    self.active_conversation_timeout = time.time() + 25.0
 
                     # Acoustic self-audio suppression: wait 400ms and drain any speaker feedback from buffer
                     await asyncio.sleep(0.4)
@@ -698,7 +717,7 @@ class AssistantOrchestrator:
             logger.error(f"Error processing text turn: {e}", exc_info=True)
             self.state_machine.transition_to(AssistantState.IDLE)
             try:
-                await self.speak_direct(f"Apologies, sir. An error occurred: {e}")
+                await self.speak_direct(f"Apologies, {settings.USER_NAME}. An error occurred: {e}")
             except Exception:
                 pass
 
@@ -756,7 +775,7 @@ class AssistantOrchestrator:
 
         self.last_spoken_text = text
         self.last_spoken_time = time.time()
-        self.active_conversation_timeout = time.time() + 6.0
+        self.active_conversation_timeout = time.time() + 25.0
 
         # Allow 400ms acoustic drain to prevent microphone echo
         await asyncio.sleep(0.4)
@@ -769,20 +788,36 @@ class AssistantOrchestrator:
         self.idle_vad.reset()
         self.state_machine.transition_to(AssistantState.IDLE)
 
-    async def _play_wake_chime(self):
-        """Synthesizes or plays an acoustic activation cue."""
+    async def _play_wake_chime(self, speak_ack: bool = False):
+        """Synthesizes or plays an instant local acoustic activation cue."""
         try:
-            cue = f"Yes, {settings.USER_NAME}?"
-            self.last_spoken_text = cue
+            import numpy as np
+            sr = 16000
+            dur = 0.12
+            t = np.linspace(0, dur, int(sr * dur), False)
+            freq = np.linspace(880, 1760, len(t))
+            env = np.exp(-14 * t)
+            pcm = (np.sin(2 * np.pi * freq * t) * env * 0.45 * 32767).astype(np.int16)
+            import io, wave
+            buf = io.BytesIO()
+            with wave.open(buf, "wb") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(sr)
+                wf.writeframes(pcm.tobytes())
+            player.play_bytes(buf.getvalue())
+
+            if speak_ack:
+                ack_path = BASE_DIR / "assets" / "cache" / "wake_ack.wav"
+                if ack_path.exists():
+                    player.play_bytes(ack_path.read_bytes())
+                else:
+                    audio = await self.tts.synthesize(f"Yes, {settings.USER_NAME}?")
+                    if audio:
+                        player.play_bytes(audio)
+
+            self.last_spoken_text = f"Yes, {settings.USER_NAME}?" if speak_ack else "chime"
             self.last_spoken_time = time.time()
-            audio = await self.tts.synthesize(cue)
-            player.play_bytes(audio)
-            await asyncio.sleep(0.3)
-            while not self.audio_stream.audio_queue.empty():
-                try:
-                    self.audio_stream.audio_queue.get_nowait()
-                except Exception:
-                    break
             self.vad.reset()
             self.idle_vad.reset()
         except Exception as e:

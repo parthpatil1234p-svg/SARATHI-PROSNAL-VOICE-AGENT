@@ -749,7 +749,7 @@
   <!-- ========================================================================= -->
   <main class="flex flex-1 items-center justify-center overflow-hidden z-10 w-full h-full select-none bg-transparent m-0 p-0" id="view-compact">
     <!-- Pure Circular Floating Voice Pod (218x218 in 220x220 circle) -->
-    <div class="relative w-[218px] h-[218px] rounded-full flex items-center justify-center group cursor-default shadow-[0_0_35px_rgba(0,229,255,0.45)] border-2 border-cyan-400/70 bg-[#0A0E14] overflow-hidden select-none" id="compact-orb-main" title="SARATHI Voice Orb">
+    <div class="relative w-[220px] h-[220px] rounded-full flex items-center justify-center group cursor-default shadow-[0_0_35px_rgba(0,229,255,0.45)] border-2 border-cyan-400/80 bg-[#0A0E14] overflow-hidden select-none m-0 p-0" id="compact-orb-main" title="SARATHI Voice Orb">
 
       <!-- Expanding Animated Voice Wave Ripples (active on speech) -->
       <div class="absolute inset-0 rounded-full border-2 border-cyan-400/50 voice-ripple-1 pointer-events-none" id="orb-ripple-1"></div>
@@ -769,7 +769,7 @@
       </div>
 
       <!-- Glowing Inner Core Reactor with Animated Audio Pulse -->
-      <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-container/40 via-cyan-500/60 to-primary/80 border-2 border-primary flex items-center justify-center core-pulse shadow-[0_0_25px_rgba(0,229,255,0.9)] z-10 cursor-pointer" id="compact-reactor-core" title="SARATHI Core (Active)">
+      <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-primary-container/40 via-cyan-500/60 to-primary/80 border-2 border-primary flex items-center justify-center core-pulse shadow-[0_0_25px_rgba(0,229,255,0.9)] z-10 cursor-pointer hover:scale-110 active:scale-95 transition-transform" id="compact-reactor-core" title="Click to Wake & Speak to SARATHI" onclick="triggerOrbWake(event);" onmouseup="event.stopPropagation();">
         <span class="material-symbols-outlined text-white text-[22px] drop-shadow-[0_0_8px_rgba(0,229,255,1)]" id="compact-core-icon">graphic_eq</span>
       </div>
 
@@ -782,7 +782,7 @@
       </div>
 
       <!-- Hover Quick Actions Dock (Smooth fade-in on mouse hover) -->
-      <div class="absolute inset-0 rounded-full bg-[#0A0E14]/94 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 p-2 select-none" onmousedown="event.stopPropagation();">
+      <div class="absolute inset-0 rounded-full bg-[#0A0E14]/94 backdrop-blur-md flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-200 z-30 p-2 select-none" onmousedown="event.stopPropagation();" onmouseup="event.stopPropagation();">
         <span class="font-label text-[9px] text-primary uppercase font-bold tracking-widest mb-0.5">SARATHI ORB</span>
         
         <div class="flex items-center justify-center gap-2" onmousedown="event.stopPropagation();">
@@ -1098,12 +1098,31 @@
         switchView('cockpit');
       }
     }
+    function triggerOrbWake(event) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const dot = document.getElementById('compact-state-dot');
+      const text = document.getElementById('compact-state-text');
+      if (text) text.textContent = 'LISTENING';
+      if (dot) {
+        dot.className = 'w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping';
+      }
+      if (window.pywebview?.api?.trigger_wake) {
+        window.pywebview.api.trigger_wake();
+      }
+    }
+
     function toggleMicMute(event) {
       if (event) {
         event.stopPropagation();
         event.preventDefault();
       }
       const btn = document.getElementById('compact-hover-mic-btn');
+      const icon = btn ? btn.querySelector('.material-symbols-outlined') : null;
+      const isCurrentlyMuted = icon ? icon.textContent.trim() === 'mic_off' : false;
+      updateMicMuteUI(!isCurrentlyMuted);
       runQuickAction('mute_mic', btn);
     }
 

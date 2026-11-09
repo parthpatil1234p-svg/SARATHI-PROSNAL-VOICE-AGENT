@@ -93,52 +93,95 @@ def bring_sarathi_window_to_front(window_title_keyword: str = "SARATHI"):
         logger.debug(f"Win32 bring to front error: {e}")
 
 
-def find_sarathi_hwnd(window_title_keyword: str = "SARATHI") -> int | None:
-    """Finds the native OS HWND for the Sarathi window."""
+def get_sarathi_hwnd(window=None) -> int | None:
+    """Finds the native OS HWND for the Sarathi window with 100% precision."""
     if sys.platform != "win32":
         return None
-    try:
-        import ctypes
-        from ctypes import wintypes
-        user32 = ctypes.windll.user32
-        matched = []
+    if window and hasattr(window, "native") and window.native:
+        try:
+            return window.native.Handle.ToInt32()
+        except Exception:
+            pass
+    import os, ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    pid = os.getpid()
+    matched = []
 
-        def enum_cb(h, _):
-            if user32.IsWindow(h):
-                length = user32.GetWindowTextLengthW(h)
-                if length > 0:
-                    buf = ctypes.create_unicode_buffer(length + 1)
-                    user32.GetWindowTextW(h, buf, length + 1)
-                    if window_title_keyword.upper() in buf.value.upper():
-                        matched.append(h)
-            return True
+    def enum_cb(h, _):
+        if user32.IsWindow(h):
+            p = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(h, ctypes.byref(p))
+            if p.value == pid:
+                cls_buf = ctypes.create_unicode_buffer(256)
+                user32.GetClassNameW(h, cls_buf, 256)
+                cls_name = cls_buf.value
+                if "WindowsForms" in cls_name:
+                    matched.append(h)
+        return True
 
-        cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
-        user32.EnumWindows(cb_type(enum_cb), 0)
-        return matched[0] if matched else None
-    except Exception:
-        return None
+    cb_type = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+    user32.EnumWindows(cb_type(enum_cb), 0)
+    return matched[0] if matched else None
 
 
-def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220):
+# Backward-compatible alias
+find_sarathi_hwnd = get_sarathi_hwnd
+
+
+def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220, window=None):
     """
-    Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or borders.
+    Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or dark corners.
+    Applies CreateEllipticRgn to the top-level Form HWND AND all child HWNDs (Chromium D3D render surface).
     When is_circular is False, restores full rectangular region for the cockpit dashboard.
     """
     if sys.platform != "win32":
         return
-    hwnd = find_sarathi_hwnd()
+    hwnd = get_sarathi_hwnd(window)
     if not hwnd:
         return
     import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    gdi32 = ctypes.windll.gdi32
+
     try:
+        children = []
+        def child_cb(ch, _):
+            children.append(ch)
+            return True
+        cb_child = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)(child_cb)
+        user32.EnumChildWindows(hwnd, cb_child, 0)
+        all_hwnds = [hwnd] + children
+
         if is_circular:
-            hrgn = ctypes.windll.gdi32.CreateEllipticRgn(0, 0, width, height)
-            ctypes.windll.user32.SetWindowRgn(hwnd, hrgn, True)
-            logger.info(f"Set circular OS window region ({width}x{height}) on HWND {hwnd}")
+            # Force exact physical client dimensions
+            SWP_NOMOVE = 0x0002
+            SWP_NOZORDER = 0x0004
+            SWP_FRAMECHANGED = 0x0020
+            user32.SetWindowPos(hwnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED)
+
+            rect = wintypes.RECT()
+            user32.GetClientRect(hwnd, ctypes.byref(rect))
+            pw = rect.right - rect.left
+            ph = rect.bottom - rect.top
+            if pw <= 0 or ph <= 0:
+                pw, ph = width, height
+
+            for h in all_hwnds:
+                try:
+                    hrgn = gdi32.CreateEllipticRgn(0, 0, pw, ph)
+                    user32.SetWindowRgn(h, hrgn, True)
+                except Exception:
+                    pass
+            logger.info(f"Set circular OS window region ({pw}x{ph}) on HWND {hwnd} and {len(children)} child surfaces")
         else:
-            ctypes.windll.user32.SetWindowRgn(hwnd, 0, True)
-            logger.info(f"Restored rectangular OS window region on HWND {hwnd}")
+            for h in all_hwnds:
+                try:
+                    user32.SetWindowRgn(h, 0, True)
+                except Exception:
+                    pass
+            logger.info(f"Restored rectangular OS window region on HWND {hwnd} and {len(children)} child surfaces")
     except Exception as e:
         logger.warning(f"Error setting window region: {e}")
 
@@ -351,11 +394,12 @@ class SarathiHUDApp:
 
         def _apply_initial_shape():
             import time
-            for _ in range(25):
-                time.sleep(0.12)
-                h = find_sarathi_hwnd()
+            for _ in range(40):
+                time.sleep(0.1)
+                h = get_sarathi_hwnd(self.window)
                 if h:
-                    set_circular_window_region(True, init_w, init_h)
+                    time.sleep(0.25)
+                    set_circular_window_region(True, init_w, init_h, window=self.window)
                     break
 
         threading.Thread(target=_apply_initial_shape, daemon=True).start()

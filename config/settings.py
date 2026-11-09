@@ -79,7 +79,7 @@ class Settings(BaseSettings):
     MOBILE_NOTIFY_TOPIC: str = "sarathi_parth_alerts"
     ENABLE_PERSISTENT_HTTP_CLIENT: bool = True
     ENABLE_FLAC_COMPRESSION: bool = True
-    GROQ_TIMEOUT_SEC: float = 3.0
+    GROQ_TIMEOUT_SEC: float = 8.0
     VAD_ENGINE: str = "silero"  # "rms" or "silero"
     ENABLE_SPECULATIVE_STT: bool = False
     ENABLE_PIPELINED_TTS_QUEUE: bool = True
