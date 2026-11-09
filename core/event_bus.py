@@ -32,12 +32,14 @@ class EventBus:
 
     async def _safe_call(
         self,
-        handler: Callable[[Any], Coroutine[Any, Any, None]],
+        handler: Callable[[Any], Coroutine[Any, Any, None] | None],
         payload: Any,
         event_name: str
     ):
         try:
-            await handler(payload)
+            res = handler(payload)
+            if asyncio.iscoroutine(res):
+                await res
         except Exception as e:
             logger.error(f"Handler error for event '{event_name}': {e}", exc_info=True)
 

@@ -129,10 +129,61 @@ def get_sarathi_hwnd(window=None) -> int | None:
 find_sarathi_hwnd = get_sarathi_hwnd
 
 
+def apply_window_transparency(window=None, is_transparent: bool = True):
+    """
+    Applies true WinForms TransparencyKey + DWM desktop composition.
+    Guarantees 100% circular floating orb with ZERO square bounding box and ZERO dark corners.
+    """
+    if sys.platform != "win32":
+        return
+    if not window or not hasattr(window, "native") or not window.native:
+        return
+    try:
+        import clr
+        clr.AddReference('System.Windows.Forms')
+        clr.AddReference('System.Drawing')
+        from System.Drawing import Color
+        from System import Action
+        import ctypes
+
+        form = window.native
+        hwnd = form.Handle.ToInt32()
+
+        # DWM glass frame extension for hardware desktop composition
+        try:
+            dwmapi = ctypes.windll.dwmapi
+            class MARGINS(ctypes.Structure):
+                _fields_ = [
+                    ("cxLeftWidth", ctypes.c_int),
+                    ("cxRightWidth", ctypes.c_int),
+                    ("cyTopHeight", ctypes.c_int),
+                    ("cyBottomHeight", ctypes.c_int),
+                ]
+            margins = MARGINS(-1, -1, -1, -1) if is_transparent else MARGINS(0, 0, 0, 0)
+            dwmapi.DwmExtendFrameIntoClientArea(hwnd, ctypes.byref(margins))
+        except Exception as dwm_err:
+            logger.debug(f"DWM glass frame notice: {dwm_err}")
+
+        def _update_form():
+            if is_transparent:
+                key = Color.FromArgb(1, 1, 1)
+                form.BackColor = key
+                form.AllowTransparency = True
+                form.TransparencyKey = key
+            else:
+                form.TransparencyKey = Color.Empty
+                form.BackColor = Color.FromArgb(10, 14, 20)
+
+        form.Invoke(Action(_update_form))
+        logger.info(f"Applied WinForms window transparency (is_transparent={is_transparent}) on HWND {hwnd}")
+    except Exception as e:
+        logger.warning(f"Error applying window transparency: {e}")
+
+
 def set_circular_window_region(is_circular: bool, width: int = 220, height: int = 220, window=None):
     """
     Physically shapes the Windows OS window into a pure circle with ZERO square bounding box or dark corners.
-    Applies CreateEllipticRgn to the top-level Form HWND AND all child HWNDs (Chromium D3D render surface).
+    Applies CreateEllipticRgn to the top-level Form HWND and all child HWNDs.
     When is_circular is False, restores full rectangular region for the cockpit dashboard.
     """
     if sys.platform != "win32":
@@ -162,26 +213,26 @@ def set_circular_window_region(is_circular: bool, width: int = 220, height: int 
             user32.SetWindowPos(hwnd, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED)
 
             rect = wintypes.RECT()
-            user32.GetClientRect(hwnd, ctypes.byref(rect))
-            pw = rect.right - rect.left
-            ph = rect.bottom - rect.top
-            if pw <= 0 or ph <= 0:
-                pw, ph = width, height
+            user32.GetWindowRect(hwnd, ctypes.byref(rect))
+            w = rect.right - rect.left
+            h = rect.bottom - rect.top
+            if w <= 0 or h <= 0:
+                w, h = width, height
 
-            for h in all_hwnds:
+            for h_w in all_hwnds:
                 try:
-                    hrgn = gdi32.CreateEllipticRgn(0, 0, pw, ph)
-                    user32.SetWindowRgn(h, hrgn, True)
+                    hrgn = gdi32.CreateEllipticRgn(0, 0, w, h)
+                    user32.SetWindowRgn(h_w, hrgn, True)
                 except Exception:
                     pass
-            logger.info(f"Set circular OS window region ({pw}x{ph}) on HWND {hwnd} and {len(children)} child surfaces")
+            logger.info(f"Set circular OS window region ({w}x{h}) on HWND {hwnd} and {len(children)} surfaces")
         else:
-            for h in all_hwnds:
+            for h_w in all_hwnds:
                 try:
-                    user32.SetWindowRgn(h, 0, True)
+                    user32.SetWindowRgn(h_w, 0, True)
                 except Exception:
                     pass
-            logger.info(f"Restored rectangular OS window region on HWND {hwnd} and {len(children)} child surfaces")
+            logger.info(f"Restored rectangular OS window region on HWND {hwnd} and {len(children)} surfaces")
     except Exception as e:
         logger.warning(f"Error setting window region: {e}")
 
@@ -202,6 +253,17 @@ class SarathiHUDApp:
         self.telemetry_thread: threading.Thread | None = None
         self.is_running = True
 
+    def _safe_eval_js(self, script: str):
+        """Asynchronously executes JavaScript without ever blocking or deadlocking calling threads."""
+        if not self.window or not self.is_running:
+            return
+        def _exec():
+            try:
+                self.window.evaluate_js(script)
+            except Exception as e:
+                logger.debug(f"Async evaluate_js error: {e}")
+        threading.Thread(target=_exec, daemon=True).start()
+
     def _run_async_loop(self):
         """Runs the background asyncio event loop for orchestrator tasks."""
         self.loop = asyncio.new_event_loop()
@@ -209,8 +271,8 @@ class SarathiHUDApp:
         self.bridge.set_loop(self.loop)
         self.orchestrator.loop = self.loop
 
-        # Wire event_bus to push live events to the WebView UI
-        async def on_event(event_name: str, payload):
+        # Wire event_bus to push live events to the WebView UI non-blockingly
+        def on_event(event_name: str, payload):
             if self.window and self.is_running:
                 try:
                     payload_raw_json = json.dumps(payload, default=str)
@@ -222,7 +284,7 @@ class SarathiHUDApp:
                         f"  else if (window.onJarvisEvent) window.onJarvisEvent('{event_name}', data); "
                         f"}} catch(e) {{ console.error('dispatch error for {event_name}:', e); }}"
                     )
-                    self.window.evaluate_js(js_code)
+                    self._safe_eval_js(js_code)
                 except Exception as e:
                     logger.debug(f"Event dispatch error for {event_name}: {e}")
 
@@ -231,10 +293,10 @@ class SarathiHUDApp:
         event_bus.subscribe("assistant_speech", lambda p: on_event("assistant_speech", p))
         event_bus.subscribe("tool_executed", lambda p: on_event("tool_executed", p))
         event_bus.subscribe("barge_in", lambda p: on_event("barge_in", p))
+
         def _handle_wake(payload):
-            self._on_wake_detected()
-            if self.loop and self.loop.is_running():
-                asyncio.run_coroutine_threadsafe(on_event("wake_detected", payload), self.loop)
+            threading.Thread(target=self._on_wake_detected, daemon=True).start()
+            on_event("wake_detected", payload)
 
         event_bus.subscribe("wake_detected", _handle_wake)
         event_bus.subscribe("mic_mute_changed", lambda p: on_event("mic_mute_changed", p))
@@ -283,14 +345,10 @@ class SarathiHUDApp:
             if hasattr(self.bridge, "collapse_to_compact"):
                 self.bridge.collapse_to_compact()
 
-            # 4. Dispatch wake_detected to Web UI
-            if self.window:
-                try:
-                    self.window.evaluate_js(
-                        "if (window.onSarathiEvent) window.onSarathiEvent('wake_detected', {mode: 'compact'});"
-                    )
-                except Exception:
-                    pass
+            # 4. Dispatch wake_detected to Web UI non-blockingly
+            self._safe_eval_js(
+                "if (window.onSarathiEvent) window.onSarathiEvent('wake_detected', {mode: 'compact'});"
+            )
 
             logger.info("SARATHI compact floating 3D HUD restored to foreground on wake detection.")
         except Exception as e:
@@ -320,31 +378,31 @@ class SarathiHUDApp:
         return False
 
     def _telemetry_ticker(self):
-        """Pushes system diagnostics and real-time audio levels to the HUD."""
+        """Pushes system diagnostics and real-time audio levels to the HUD non-blockingly."""
         last_telemetry_time = 0.0
 
         while self.is_running:
             now = time.time()
             if self.window:
                 try:
-                    # 1. Audio Visualizer Level (~33Hz for silky-smooth HUD responsiveness)
+                    # 1. Audio Visualizer Level (~16Hz is smooth and does not congest WebView2 thread)
                     audio_level = getattr(self.orchestrator.audio_stream, "latest_level", 0)
                     if audio_level > 0:
                         js_audio = f"if (window.updateAudioLevel) window.updateAudioLevel({audio_level});"
-                        self.window.evaluate_js(js_audio)
+                        self._safe_eval_js(js_audio)
 
                     # 2. System Hardware Telemetry (~1Hz)
                     if now - last_telemetry_time >= 1.0:
                         telem = self.bridge.get_telemetry()
                         telem_json = json.dumps(telem)
                         js_telem = f"if (window.updateTelemetry) window.updateTelemetry({telem_json});"
-                        self.window.evaluate_js(js_telem)
+                        self._safe_eval_js(js_telem)
                         last_telemetry_time = now
 
                 except Exception:
                     pass
 
-            time.sleep(0.03)
+            time.sleep(0.06)
 
     def launch(self, start_in_background: bool = False, lock=None):
         """Launches the Mark VII Tactical HUD Window."""
@@ -395,14 +453,20 @@ class SarathiHUDApp:
         def _apply_initial_shape():
             import time
             for _ in range(40):
-                time.sleep(0.1)
+                time.sleep(0.15)
                 h = get_sarathi_hwnd(self.window)
                 if h:
-                    time.sleep(0.25)
+                    apply_window_transparency(self.window, is_transparent=True)
                     set_circular_window_region(True, init_w, init_h, window=self.window)
                     break
 
         threading.Thread(target=_apply_initial_shape, daemon=True).start()
+
+        def _on_shown():
+            apply_window_transparency(self.window, is_transparent=True)
+            set_circular_window_region(True, init_w, init_h, window=self.window)
+
+        self.window.events.shown += _on_shown
 
         self.bridge.set_window(self.window)
         if hasattr(self.bridge, "set_hud_app"):

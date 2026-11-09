@@ -57,16 +57,20 @@ class SarathiWebBridge:
                 w, h = 1440, 900
                 x = max(10, (sw - w) // 2)
                 y = max(10, (sh - h) // 2)
-                # Remove circular OS region clipping so full cockpit dashboard is visible
+                # Remove circular OS region clipping and transparency so full cockpit dashboard is visible
                 try:
-                    from gui.hud import set_circular_window_region
+                    from gui.hud import apply_window_transparency, set_circular_window_region
+                    apply_window_transparency(self._window, is_transparent=False)
                     set_circular_window_region(False, window=self._window)
                 except Exception:
                     pass
                 self._window.resize(w, h)
                 self._window.move(x, y)
                 self._window.on_top = False
-                self._window.evaluate_js("switchView('cockpit');")
+                if self._hud_app and hasattr(self._hud_app, "_safe_eval_js"):
+                    self._hud_app._safe_eval_js("switchView('cockpit');")
+                else:
+                    self._window.evaluate_js("switchView('cockpit');")
                 logger.info("Expanded to full Tactical HUD Dashboard.")
             except Exception as e:
                 logger.warning(f"Error expanding dashboard: {e}")
@@ -84,13 +88,17 @@ class SarathiWebBridge:
                 self._window.resize(w, h)
                 self._window.move(x, y)
                 self._window.on_top = True
-                # Re-apply circular OS region clipping to guarantee 0 square box
+                # Apply 100% true desktop transparency and circular OS region clipping
                 try:
-                    from gui.hud import set_circular_window_region
+                    from gui.hud import apply_window_transparency, set_circular_window_region
+                    apply_window_transparency(self._window, is_transparent=True)
                     set_circular_window_region(True, w, h, window=self._window)
                 except Exception:
                     pass
-                self._window.evaluate_js("switchView('compact');")
+                if self._hud_app and hasattr(self._hud_app, "_safe_eval_js"):
+                    self._hud_app._safe_eval_js("switchView('compact');")
+                else:
+                    self._window.evaluate_js("switchView('compact');")
                 logger.info("Collapsed to Compact Floating Circular Voice Orb (220x220).")
             except Exception as e:
                 logger.warning(f"Error collapsing to compact: {e}")

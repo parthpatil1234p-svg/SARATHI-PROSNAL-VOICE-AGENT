@@ -82,14 +82,16 @@ def check_wake_word_match(transcript: str) -> bool:
         "sarati", "sarthy", "sarthee", "surathi", "सारथी", "सार्थी",
         "his arty", "is arty", "he sarthi", "hey sarthi", "he sarathi", "hey sarathi",
         "he sarti", "hey sarti", "hey arti", "he arti", "hey jarvis", "jarvis",
-        "hey sarthak", "sarthak", "sarathi ji", "sarthi ji", "sarthi suno", "sarathi suno"
+        "hey sarthak", "sarthak", "sarathi ji", "sarthi ji", "sarthi suno", "sarathi suno",
+        "sari", "sarkii", "sarki", "saari", "sarthe", "swarthi", "srathi", "surati", "sharti",
+        "saarthee", "he sari", "hey sari", "hey sarki", "he sarki", "he sarath", "hey sarath"
     )
     if any(kw in cleaned for kw in wake_keywords):
         return True
 
-    # Regex pattern: (hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|arthi|jarvis)
+    # Regex pattern: (hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|jarvis)
     import re
-    pattern = r"\b(hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|arthi|jarvis)\b"
+    pattern = r"\b(hey|he|hi|hai|oye|sun|suno|arre|are)?\s*(sarathi|sarthi|saarthi|sharthi|sarti|sarthy|sarthee|sari|sarki|sarkii|arthi|jarvis)\b"
     if re.search(pattern, cleaned):
         return True
 
@@ -519,7 +521,8 @@ class AssistantOrchestrator:
             "hey sarathi", "hey sarthi", "he sarathi", "he sarthi", "hey jarvis", "he jarvis",
             "his arty", "is arty", "hey arti", "he arti", "sarathi ji", "sarthi ji",
             "sarthi suno", "sarathi suno", "sarathi", "sarthi", "saarthi", "sharthi",
-            "sarathy", "sarath", "sarti", "surathi", "सारथी", "सार्थी", "jarvis"
+            "sarathy", "sarath", "sarti", "surathi", "सारथी", "सार्थी", "jarvis",
+            "hey sari", "he sari", "sari", "sarki", "sarkii", "saari"
         ]
         for wp in wake_phrases:
             if lower.startswith(wp):
@@ -789,7 +792,7 @@ class AssistantOrchestrator:
         self.state_machine.transition_to(AssistantState.IDLE)
 
     async def _play_wake_chime(self, speak_ack: bool = False):
-        """Synthesizes or plays an instant local acoustic activation cue."""
+        """Synthesizes or plays an instant local acoustic activation cue asynchronously."""
         try:
             import numpy as np
             sr = 16000
@@ -805,16 +808,18 @@ class AssistantOrchestrator:
                 wf.setsampwidth(2)
                 wf.setframerate(sr)
                 wf.writeframes(pcm.tobytes())
-            player.play_bytes(buf.getvalue())
+
+            # Non-blocking async playback so asyncio event loop never stalls
+            await asyncio.to_thread(player.play_bytes, buf.getvalue())
 
             if speak_ack:
                 ack_path = BASE_DIR / "assets" / "cache" / "wake_ack.wav"
                 if ack_path.exists():
-                    player.play_bytes(ack_path.read_bytes())
+                    await asyncio.to_thread(player.play_bytes, ack_path.read_bytes())
                 else:
                     audio = await self.tts.synthesize(f"Yes, {settings.USER_NAME}?")
                     if audio:
-                        player.play_bytes(audio)
+                        await asyncio.to_thread(player.play_bytes, audio)
 
             self.last_spoken_text = f"Yes, {settings.USER_NAME}?" if speak_ack else "chime"
             self.last_spoken_time = time.time()
